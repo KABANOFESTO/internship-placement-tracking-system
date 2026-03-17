@@ -68,3 +68,31 @@ InternTrack is a full-stack web application designed to streamline the managemen
 ---
 
 ## 📂 Project Structure
+
+interntrack/
+│
+├── backend/ # Django backend
+│ ├── manage.py
+│ ├── interntrack/ # Main project
+│ └── apps/ # Django apps
+│
+├── frontend/ # Next.js frontend
+│ ├── pages/
+│ ├── components/
+│ └── public/
+│
+├── .gitignore
+├── README.md
+└── requirements.txt
+
+
+---
+
+## ⚙️ Installation & Setup
+
+### 1️⃣ Clone the Repository
+
+```bash
+git clone https://github.com/KABANOFESTO/internship-placement-tracking-system
+cd internship-placement-tracking-system
+
