@@ -70,20 +70,20 @@ InternTrack is a full-stack web application designed to streamline the managemen
 ## 📂 Project Structure
 
 - interntrack/
--│
--├── backend/ # Django backend
--│ ├── manage.py
--│ ├── interntrack/ # Main project
--│ └── apps/ # Django apps
--│
--├── frontend/ # Next.js frontend
--│ ├── pages/
--│ ├── components/
--│ └── public/
--│
--├── .gitignore
--├── README.md
--└── requirements.txt
+│
+├── backend/ # Django backend
+│ ├── manage.py
+│ ├── interntrack/ # Main project
+│ └── apps/ # Django apps
+│
+├── frontend/ # Next.js frontend
+│ ├── pages/
+│ ├── components/
+│ └── public/
+│
+├── .gitignore
+├── README.md
+└── requirements.txt
 
 
 ---
