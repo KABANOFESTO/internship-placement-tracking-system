@@ -20,7 +20,9 @@ from .serializers import (
 from .permissions import (
     IsAdmin,
     IsSupervisor,
-    IsWorker,
+    IsStudent,
+    # IsAdminOrSupervisor,
+    # IsAdminSupervisorOrStudent,
 )
 from auditlogs.audit_log_utils import log_action
 import logging
@@ -199,11 +201,11 @@ class SupervisorOnlyView(APIView):
     def get(self, request):
         return Response({"message": "Hello Supervisor"})
 
-class WorkerOnlyView(APIView):
-    permission_classes = [permissions.IsAuthenticated, IsWorker]
+class StudentOnlyView(APIView):
+    permission_classes = [permissions.IsAuthenticated, IsStudent]
 
     def get(self, request):
-        return Response({"message": "Hello Cleaning Staff"})
+        return Response({"message": "Hello Student"})
 class ProfileUpdateView(generics.UpdateAPIView):
     serializer_class = ProfileUpdateSerializer
     permission_classes = [permissions.IsAuthenticated]
