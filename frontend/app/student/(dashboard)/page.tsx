@@ -19,6 +19,19 @@ import { useGetEvaluationsQuery } from "@/lib/redux/slices/EvaluationsSlice";
 import { useGetReportsQuery } from "@/lib/redux/slices/ReportsSlice";
 import { useGetNotificationsQuery } from "@/lib/redux/slices/NotificationsSlice";
 import { useGetApplicationsQuery } from "@/lib/redux/slices/InternshipsSlice";
+import {
+    ResponsiveContainer,
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    Tooltip,
+    PieChart,
+    Pie,
+    Cell,
+    BarChart,
+    Bar,
+} from "recharts";
 
 export default function StudentDashboard() {
     const [getMyDetails, { data: userDetails }] = useGetMyDetailsMutation();
@@ -143,6 +156,38 @@ export default function StudentDashboard() {
         },
     ];
 
+    const hoursByDate = useMemo(() => {
+        if (!progressLogs) return [];
+        const grouped: Record<string, number> = {};
+        progressLogs.forEach((log) => {
+            const dateKey = format(new Date(log.date), "MMM dd");
+            grouped[dateKey] = (grouped[dateKey] || 0) + parseFloat(log.hours_completed || "0");
+        });
+        return Object.entries(grouped).map(([date, hours]) => ({ date, hours }));
+    }, [progressLogs]);
+
+    const evaluationTrend = useMemo(() => {
+        if (!evaluations) return [];
+        return evaluations
+            .slice()
+            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+            .map((e) => ({
+                date: format(new Date(e.created_at), "MMM dd"),
+                score: e.score || 0,
+            }));
+    }, [evaluations]);
+
+    const applicationStatusData = useMemo(() => {
+        if (!applications) return [];
+        const grouped: Record<string, number> = {};
+        applications.forEach((app) => {
+            grouped[app.status] = (grouped[app.status] || 0) + 1;
+        });
+        return Object.entries(grouped).map(([name, value]) => ({ name, value }));
+    }, [applications]);
+
+    const pieColors = ["#2563eb", "#22c55e", "#f59e0b", "#ef4444", "#6366f1"];
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="p-6 lg:p-8">
@@ -191,7 +236,32 @@ export default function StudentDashboard() {
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-2">
+                    <div className="lg:col-span-2 space-y-6">
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <div className="mb-4 flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-gray-900">Hours Logged</h2>
+                                <Link className="text-sm text-blue-600 hover:text-blue-700" href="/student/progress-tracking">
+                                    Manage logs
+                                </Link>
+                            </div>
+                            {hoursByDate.length === 0 ? (
+                                <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
+                                    No hours logged yet.
+                                </div>
+                            ) : (
+                                <div className="h-64">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={hoursByDate}>
+                                            <XAxis dataKey="date" />
+                                            <YAxis />
+                                            <Tooltip />
+                                            <Line type="monotone" dataKey="hours" stroke="#2563eb" strokeWidth={2} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+                        </div>
+
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <div className="mb-4 flex items-center justify-between">
                                 <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
@@ -232,21 +302,87 @@ export default function StudentDashboard() {
                         </div>
                     </div>
 
+                    <div className="space-y-6">
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <div className="mb-4 flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
+                                <MessageSquare className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <div className="rounded-xl bg-gray-50 p-4 text-center">
+                                <p className="text-3xl font-semibold text-gray-900">{unreadNotifications}</p>
+                                <p className="mt-1 text-sm text-gray-500">Unread notifications</p>
+                                <Link
+                                    href="/student/notifications"
+                                    className="mt-4 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
+                                >
+                                    View notifications
+                                </Link>
+                            </div>
+                        </div>
+
+                        <div className="rounded-2xl bg-white p-6 shadow-sm">
+                            <div className="mb-4 flex items-center justify-between">
+                                <h2 className="text-lg font-semibold text-gray-900">Application Status</h2>
+                                <TrendingUp className="h-5 w-5 text-gray-400" />
+                            </div>
+                            {applicationStatusData.length === 0 ? (
+                                <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
+                                    No applications yet.
+                                </div>
+                            ) : (
+                                <div className="h-52">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie dataKey="value" data={applicationStatusData} innerRadius={40} outerRadius={70} paddingAngle={5}>
+                                                {applicationStatusData.map((entry, index) => (
+                                                    <Cell key={entry.name} fill={pieColors[index % pieColors.length]} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            )}
+                            <div className="mt-4 space-y-1 text-xs text-gray-500">
+                                {applicationStatusData.map((item, index) => (
+                                    <div key={item.name} className="flex items-center justify-between">
+                                        <span className="flex items-center gap-2">
+                                            <span
+                                                className="inline-block h-2 w-2 rounded-full"
+                                                style={{ backgroundColor: pieColors[index % pieColors.length] }}
+                                            />
+                                            {item.name}
+                                        </span>
+                                        <span>{item.value}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <div className="rounded-2xl bg-white p-6 shadow-sm">
                         <div className="mb-4 flex items-center justify-between">
-                            <h2 className="text-lg font-semibold text-gray-900">Notifications</h2>
-                            <MessageSquare className="h-5 w-5 text-gray-400" />
+                            <h2 className="text-lg font-semibold text-gray-900">Evaluation Trend</h2>
+                            <Star className="h-5 w-5 text-yellow-500" />
                         </div>
-                        <div className="rounded-xl bg-gray-50 p-4 text-center">
-                            <p className="text-3xl font-semibold text-gray-900">{unreadNotifications}</p>
-                            <p className="mt-1 text-sm text-gray-500">Unread notifications</p>
-                            <Link
-                                href="/student/notifications"
-                                className="mt-4 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700"
-                            >
-                                View notifications
-                            </Link>
-                        </div>
+                        {evaluationTrend.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
+                                No evaluations yet.
+                            </div>
+                        ) : (
+                            <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={evaluationTrend}>
+                                        <XAxis dataKey="date" />
+                                        <YAxis />
+                                        <Tooltip />
+                                        <Bar dataKey="score" fill="#f59e0b" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

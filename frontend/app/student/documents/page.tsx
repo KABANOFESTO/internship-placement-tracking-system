@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Download, FileText, Plus, Trash2, Upload } from "lucide-react";
 import { useGetDocumentsQuery, useCreateDocumentMutation, useDeleteDocumentMutation } from "@/lib/redux/slices/DocumentsSlice";
+import { toast } from "sonner";
 
 export default function StudentDocumentsPage() {
     const { data: documents, isLoading } = useGetDocumentsQuery();
@@ -24,14 +25,22 @@ export default function StudentDocumentsPage() {
     }, [documents, apiBase]);
 
     const handleUpload = async () => {
-        if (!file) return;
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("name", name || file.name);
-        await createDocument(formData).unwrap();
-        setShowUpload(false);
-        setFile(null);
-        setName("");
+        if (!file) {
+            toast.error("Please select a file.");
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("name", name || file.name);
+            await createDocument(formData).unwrap();
+            toast.success("Document uploaded.");
+            setShowUpload(false);
+            setFile(null);
+            setName("");
+        } catch {
+            toast.error("Failed to upload document.");
+        }
     };
 
     return (
@@ -90,7 +99,14 @@ export default function StudentDocumentsPage() {
                                                         Download
                                                     </a>
                                                     <button
-                                                        onClick={() => deleteDocument(doc.id)}
+                                                        onClick={async () => {
+                                                            try {
+                                                                await deleteDocument(doc.id).unwrap();
+                                                                toast.success("Document deleted.");
+                                                            } catch {
+                                                                toast.error("Failed to delete document.");
+                                                            }
+                                                        }}
                                                         className="inline-flex items-center rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
                                                     >
                                                         <Trash2 className="mr-1 h-3 w-3" />

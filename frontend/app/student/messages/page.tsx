@@ -4,9 +4,10 @@ import { useState } from "react";
 import { Send } from "lucide-react";
 import { useGetAllMessagesQuery, useSendMessageMutation } from "@/lib/redux/slices/CommunicationSlices";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 
 export default function StudentMessagesPage() {
-    const { data: messages, isLoading } = useGetAllMessagesQuery();
+    const { data: messages, isLoading } = useGetAllMessagesQuery({});
     const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
     const [receiver, setReceiver] = useState("");
@@ -14,14 +15,30 @@ export default function StudentMessagesPage() {
     const [content, setContent] = useState("");
 
     const handleSend = async () => {
-        if (!receiver || !subject || !content) return;
-        await sendMessage({
-            receiver: Number(receiver),
-            subject,
-            message_content: content,
-        }).unwrap();
-        setSubject("");
-        setContent("");
+        if (!receiver) {
+            toast.error("Receiver ID is required.");
+            return;
+        }
+        if (!subject.trim()) {
+            toast.error("Subject is required.");
+            return;
+        }
+        if (!content.trim()) {
+            toast.error("Message is required.");
+            return;
+        }
+        try {
+            await sendMessage({
+                receiver: Number(receiver),
+                subject,
+                message_content: content,
+            }).unwrap();
+            toast.success("Message sent.");
+            setSubject("");
+            setContent("");
+        } catch {
+            toast.error("Failed to send message.");
+        }
     };
 
     return (

@@ -9,6 +9,7 @@ import {
     useCreateApplicationMutation,
     useGetRecommendationsQuery,
 } from "@/lib/redux/slices/InternshipsSlice";
+import { toast } from "sonner";
 
 export default function StudentApplicationsPage() {
     const [activeTab, setActiveTab] = useState<"applications" | "positions">("applications");
@@ -42,16 +43,32 @@ export default function StudentApplicationsPage() {
     }, [positions, searchTerm]);
 
     const handleSubmit = async () => {
-        if (!selectedPositionId || !coverLetter || !cvFile) return;
-        const formData = new FormData();
-        formData.append("position", selectedPositionId);
-        formData.append("cover_letter", coverLetter);
-        formData.append("cv", cvFile);
-        await createApplication(formData).unwrap();
-        setShowApplyModal(false);
-        setSelectedPositionId(null);
-        setCoverLetter("");
-        setCvFile(null);
+        if (!selectedPositionId) {
+            toast.error("Please select a position.");
+            return;
+        }
+        if (!coverLetter.trim()) {
+            toast.error("Cover letter is required.");
+            return;
+        }
+        if (!cvFile) {
+            toast.error("Please upload your CV.");
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append("position", selectedPositionId);
+            formData.append("cover_letter", coverLetter);
+            formData.append("cv", cvFile);
+            await createApplication(formData).unwrap();
+            toast.success("Application submitted.");
+            setShowApplyModal(false);
+            setSelectedPositionId(null);
+            setCoverLetter("");
+            setCvFile(null);
+        } catch {
+            toast.error("Failed to submit application.");
+        }
     };
 
     return (

@@ -43,7 +43,11 @@ export default function MyInternshipPage() {
                             <div className="mt-4 space-y-3 text-sm text-gray-600">
                                 <div>Placement ID: {placement.id}</div>
                                 <div>Application ID: {placement.application}</div>
-                                <div>Supervisor: {placement.supervisor ? `User #${placement.supervisor}` : "Pending"}</div>
+                                {placement.supervisor ? (
+                                    <div>Supervisor: User #{placement.supervisor}</div>
+                                ) : (
+                                    <div>Supervisor: Pending assignment</div>
+                                )}
                                 <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4" />
                                     {format(new Date(placement.start_date), "MMM dd, yyyy")} - {format(new Date(placement.end_date), "MMM dd, yyyy")}

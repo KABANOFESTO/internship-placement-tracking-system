@@ -56,12 +56,14 @@ export default function StudentPlacementPage() {
                                         {format(new Date(confirmedPlacement.end_date), "MMM dd, yyyy")}
                                     </p>
                                 </div>
-                                <div className="rounded-lg bg-gray-50 p-4">
-                                    <p className="text-xs text-gray-500">Supervisor</p>
-                                    <p className="mt-1 text-sm font-medium text-gray-900">
-                                        {confirmedPlacement.supervisor ? `User #${confirmedPlacement.supervisor}` : "Not assigned"}
-                                    </p>
-                                </div>
+                                {confirmedPlacement.supervisor && (
+                                    <div className="rounded-lg bg-gray-50 p-4">
+                                        <p className="text-xs text-gray-500">Supervisor</p>
+                                        <p className="mt-1 text-sm font-medium text-gray-900">
+                                            User #{confirmedPlacement.supervisor}
+                                        </p>
+                                    </div>
+                                )}
                                 <div className="rounded-lg bg-gray-50 p-4">
                                     <p className="text-xs text-gray-500">Status</p>
                                     <p className="mt-1 text-sm font-medium text-gray-900">Confirmed</p>

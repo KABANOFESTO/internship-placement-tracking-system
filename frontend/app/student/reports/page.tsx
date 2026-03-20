@@ -1,24 +1,100 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Upload } from "lucide-react";
+import { FileText, Upload, Download } from "lucide-react";
 import { useGetReportsQuery, useCreateReportMutation } from "@/lib/redux/slices/ReportsSlice";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useGetMyDetailsMutation } from "@/lib/redux/slices/AuthSlice";
 
 export default function StudentReportsPage() {
     const { data: reports, isLoading } = useGetReportsQuery();
     const [createReport, { isLoading: isSubmitting }] = useCreateReportMutation();
+    const [getMyDetails, { data: userDetails }] = useGetMyDetailsMutation();
 
     const [type, setType] = useState<"WEEKLY" | "FINAL">("WEEKLY");
     const [file, setFile] = useState<File | null>(null);
 
     const handleSubmit = async () => {
-        if (!file) return;
-        const formData = new FormData();
-        formData.append("type", type);
-        formData.append("file", file);
-        await createReport(formData).unwrap();
-        setFile(null);
+        if (!file) {
+            toast.error("Please select a report file.");
+            return;
+        }
+        try {
+            const formData = new FormData();
+            formData.append("type", type);
+            formData.append("file", file);
+            await createReport(formData).unwrap();
+            toast.success("Report submitted.");
+            setFile(null);
+        } catch {
+            toast.error("Failed to submit report.");
+        }
+    };
+
+    const loadLogoDataUrl = async (logoUrl: string): Promise<string | null> => {
+        try {
+            const response = await fetch(logoUrl);
+            if (!response.ok) return null;
+            const blob = await response.blob();
+            return await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+            });
+        } catch {
+            return null;
+        }
+    };
+
+    const handleExportPdf = async () => {
+        if (!reports || reports.length === 0) {
+            toast.error("No reports to export.");
+            return;
+        }
+        try {
+            if (!userDetails) {
+                await getMyDetails({}).unwrap();
+            }
+            const exporterName = userDetails?.username || "Student";
+            const doc = new jsPDF();
+
+            const logoDataUrl = await loadLogoDataUrl("/logo.png");
+            if (logoDataUrl) {
+                doc.addImage(logoDataUrl, "PNG", 14, 10, 20, 20);
+            }
+
+            doc.setFontSize(16);
+            doc.text("Internship Reports Summary", 40, 18);
+            doc.setFontSize(10);
+            doc.text(`Exported on ${new Date().toLocaleString()}`, 40, 24);
+
+            const tableBody = reports.map((report) => [
+                report.id,
+                report.type,
+                report.submitted_at ? new Date(report.submitted_at).toLocaleDateString() : "-",
+                report.feedback ? "Yes" : "No",
+            ]);
+
+            autoTable(doc, {
+                startY: 32,
+                head: [["ID", "Type", "Submitted", "Feedback"]],
+                body: tableBody,
+                styles: { fontSize: 9 },
+                headStyles: { fillColor: [37, 99, 235] },
+            });
+
+            const pageHeight = doc.internal.pageSize.height || 297;
+            doc.setFontSize(9);
+            doc.text(`Exported by ${exporterName}`, 14, pageHeight - 10);
+
+            doc.save("internship-reports.pdf");
+            toast.success("PDF exported.");
+        } catch {
+            toast.error("Failed to export PDF.");
+        }
     };
 
     return (
@@ -29,7 +105,16 @@ export default function StudentReportsPage() {
                         <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
                         <p className="mt-1 text-sm text-gray-500">Submit and track internship reports</p>
                     </div>
-                    <FileText className="h-6 w-6 text-gray-400" />
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleExportPdf}
+                            className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Export PDF
+                        </button>
+                        <FileText className="h-6 w-6 text-gray-400" />
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { Clock, PlusCircle } from "lucide-react";
 import { useGetProgressLogsQuery, useCreateProgressLogMutation } from "@/lib/redux/slices/TrackingSlice";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 export default function StudentProgressTrackingPage() {
     const { data: logs, isLoading } = useGetProgressLogsQuery();
@@ -19,11 +20,27 @@ export default function StudentProgressTrackingPage() {
     }, [logs]);
 
     const handleSubmit = async () => {
-        if (!date || !hours || !summary) return;
-        await createLog({ date, hours_completed: hours, summary }).unwrap();
-        setDate("");
-        setHours("");
-        setSummary("");
+        if (!date) {
+            toast.error("Please select a date.");
+            return;
+        }
+        if (!hours || Number(hours) <= 0) {
+            toast.error("Please enter valid hours.");
+            return;
+        }
+        if (!summary.trim()) {
+            toast.error("Summary is required.");
+            return;
+        }
+        try {
+            await createLog({ date, hours_completed: hours, summary }).unwrap();
+            toast.success("Progress log added.");
+            setDate("");
+            setHours("");
+            setSummary("");
+        } catch {
+            toast.error("Failed to add log.");
+        }
     };
 
     return (
