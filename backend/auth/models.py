@@ -28,7 +28,6 @@ class User(AbstractUser):
     status = models.CharField(
         max_length=10, choices=Status.choices, default=Status.ACTIVE
     )
-
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]
     profile_picture = models.ImageField(
@@ -85,3 +84,29 @@ class User(AbstractUser):
     def is_user_active(self):
         """Check if user is active (using status field as source of truth)"""
         return self.status == self.Status.ACTIVE
+    
+class StudentProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    student_id = models.CharField(max_length=50)
+    program = models.CharField(max_length=100)
+    year_of_study = models.IntegerField()
+    graduation_date = models.DateField()
+    skills = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.user.username
+    
+class SupervisorProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    organization = models.CharField(max_length=255)
+    position = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.user.username
+    
+class CoordinatorProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    department = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.user.username
