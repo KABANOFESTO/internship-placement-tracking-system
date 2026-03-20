@@ -17,6 +17,7 @@ import {
     HelpCircle,
     ChevronRight,
     GraduationCap,
+    BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
@@ -29,6 +30,7 @@ const NAV_SECTIONS = [
         label: "Main",
         items: [
             { title: "Dashboard", url: "/student", icon: LayoutDashboard },
+            { title: "Internship Applications", url: "/student/applications", icon: BookOpen },
             { title: "Placement", url: "/student/placement", icon: MapPin },
             { title: "My Internship", url: "/student/my-internship", icon: Briefcase },
             { title: "Progress Tracking", url: "/student/progress-tracking", icon: TrendingUp },

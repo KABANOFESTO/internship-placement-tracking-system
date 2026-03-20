@@ -1,4 +1,3 @@
-// app/dashboard/page.tsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,14 +11,10 @@ import {
     Star,
     TrendingUp,
     AlertCircle,
-    ArrowRight,
     ChevronRight,
     Award,
     BookOpen,
-    Target,
-    UserCheck,
-    ExternalLink,
-    Eye
+    ExternalLink
 } from 'lucide-react';
 import Link from 'next/link';
 import { format, formatDistanceToNow } from 'date-fns';
