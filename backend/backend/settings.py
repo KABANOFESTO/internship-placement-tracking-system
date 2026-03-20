@@ -50,6 +50,12 @@ INSTALLED_APPS = [
     'auth.apps.AuthConfig',
     'auditlogs',
     'communication',
+    'documents',
+    'notifications',
+    'reports',
+    'internships',
+    'evaluations',
+    'tracking',
     'corsheaders',
 ]
 
@@ -84,6 +90,7 @@ SIMPLE_JWT = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
