@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     'auth.apps.AuthConfig',
     'auditlogs',
+    'communication',
     'corsheaders',
 ]
 
