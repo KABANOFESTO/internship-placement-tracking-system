@@ -14,6 +14,22 @@ export const apiSlice = createApi({
             return headers;
         },
     }),
-    tagTypes: ["Auth", "AuditLog", "Attendance", "Location", "Task", "TaskUpdate", "Review"],
+    tagTypes: [
+        "Auth",
+        "AuditLog",
+        "Document",
+        "Notification",
+        "Report",
+        "Organization",
+        "Position",
+        "Application",
+        "Placement",
+        "Evaluation",
+        "EvaluationCriterion",
+        "EvaluationRating",
+        "ProgressLog",
+        "Milestone",
+        "Analytics",
+    ],
     endpoints: () => ({}),
 });
