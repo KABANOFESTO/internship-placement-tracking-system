@@ -7,11 +7,18 @@ import { formatDistanceToNow } from "date-fns";
 export default function AdminAuditLogsPage() {
     const { data: auditLogs = [], isLoading, isError } = useGetAuditLogsQuery();
     const [filter, setFilter] = useState("all");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const filteredLogs = useMemo(() => {
-        if (filter === "all") return auditLogs;
-        return auditLogs.filter((log) => log.action === filter);
-    }, [auditLogs, filter]);
+        let data = filter === "all" ? auditLogs : auditLogs.filter((log) => log.action === filter);
+        if (!searchTerm) return data;
+        const term = searchTerm.toLowerCase();
+        return data.filter((log) =>
+            (log.user || "").toLowerCase().includes(term) ||
+            (log.target_user || "").toLowerCase().includes(term) ||
+            log.action.toLowerCase().includes(term)
+        );
+    }, [auditLogs, filter, searchTerm]);
 
     const actionOptions = useMemo(() => {
         const unique = new Set(auditLogs.map((log) => log.action));
@@ -48,20 +55,28 @@ export default function AdminAuditLogsPage() {
                             <h2 className="text-lg font-semibold text-gray-900">Audit Logs</h2>
                             <p className="text-sm text-gray-500 mt-1">Track system activities and user actions</p>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Filter className="h-4 w-4 text-gray-400" />
-                            <select
-                                value={filter}
-                                onChange={(e) => setFilter(e.target.value)}
-                                className="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
-                            >
-                                <option value="all">All Actions</option>
-                                {actionOptions.map((action) => (
-                                    <option key={action} value={action}>
-                                        {action}
-                                    </option>
-                                ))}
-                            </select>
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                            <input
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm sm:max-w-sm"
+                                placeholder="Search by user, action, or target"
+                            />
+                            <div className="flex items-center gap-2">
+                                <Filter className="h-4 w-4 text-gray-400" />
+                                <select
+                                    value={filter}
+                                    onChange={(e) => setFilter(e.target.value)}
+                                    className="text-sm border border-gray-300 rounded-md px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-teal-500 focus:border-teal-500"
+                                >
+                                    <option value="all">All Actions</option>
+                                    {actionOptions.map((action) => (
+                                        <option key={action} value={action}>
+                                            {action}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>

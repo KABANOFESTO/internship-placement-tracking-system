@@ -29,6 +29,7 @@ export default function AdminInternshipManagementPage() {
     const [editDescription, setEditDescription] = useState("");
     const [editSkills, setEditSkills] = useState("");
     const [editCapacity, setEditCapacity] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const handleCreate = async () => {
         if (!title || !organization || !description || !capacity) {
@@ -156,6 +157,14 @@ export default function AdminInternshipManagementPage() {
                     <div className="lg:col-span-2 space-y-6">
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-gray-900">Positions</h2>
+                            <div className="mt-3">
+                                <input
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                    placeholder="Search positions"
+                                />
+                            </div>
                             {isLoading && <p className="mt-4 text-sm text-gray-500">Loading positions...</p>}
                             {!isLoading && (!positions || positions.length === 0) && (
                                 <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
@@ -164,7 +173,14 @@ export default function AdminInternshipManagementPage() {
                             )}
                             {!isLoading && positions && positions.length > 0 && (
                                 <div className="mt-4 space-y-3">
-                                    {positions.map((pos) => (
+                                    {positions
+                                        .filter((pos) =>
+                                            searchTerm
+                                                ? pos.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                  pos.required_skills.toLowerCase().includes(searchTerm.toLowerCase())
+                                                : true
+                                        )
+                                        .map((pos) => (
                                         <div key={pos.id} className="rounded-xl border border-gray-200 p-4">
                                             <p className="text-sm font-medium text-gray-900">{pos.title}</p>
                                             <p className="text-xs text-gray-500">Organization: {pos.organization}</p>

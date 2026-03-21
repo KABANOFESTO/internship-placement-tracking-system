@@ -18,8 +18,19 @@ export default function AdminMessagesPage() {
     const [receiver, setReceiver] = useState("");
     const [subject, setSubject] = useState("");
     const [content, setContent] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const userOptions = useMemo(() => users || [], [users]);
+    const filteredMessages = useMemo(() => {
+        if (!messages) return [];
+        if (!searchTerm) return messages;
+        const term = searchTerm.toLowerCase();
+        return messages.filter((message) =>
+            message.subject.toLowerCase().includes(term) ||
+            message.message_content.toLowerCase().includes(term) ||
+            String(message.receiver).toLowerCase().includes(term)
+        );
+    }, [messages, searchTerm]);
 
     const handleSend = async () => {
         if (!receiver) {
@@ -107,15 +118,26 @@ export default function AdminMessagesPage() {
 
                     <div className="lg:col-span-2 rounded-2xl bg-white p-6 shadow-sm">
                         <h2 className="text-lg font-semibold text-gray-900">Recent Messages</h2>
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <input
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:max-w-sm"
+                                placeholder="Search by subject, content, or receiver"
+                            />
+                            <span className="text-xs text-gray-500">
+                                {filteredMessages.length} message{filteredMessages.length !== 1 ? "s" : ""}
+                            </span>
+                        </div>
                         {isLoading && <p className="mt-4 text-sm text-gray-500">Loading messages...</p>}
-                        {!isLoading && (!messages || messages.length === 0) && (
+                        {!isLoading && filteredMessages.length === 0 && (
                             <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
                                 No messages yet.
                             </div>
                         )}
-                        {!isLoading && messages && messages.length > 0 && (
+                        {!isLoading && filteredMessages.length > 0 && (
                             <div className="mt-4 space-y-3">
-                                {messages.map((message) => (
+                                {filteredMessages.map((message) => (
                                     <div key={message.id} className="rounded-xl border border-gray-200 p-4">
                                         <div className="flex items-start justify-between">
                                             <div>

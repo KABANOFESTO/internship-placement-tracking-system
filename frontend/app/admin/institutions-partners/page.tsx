@@ -43,6 +43,8 @@ export default function AdminInstitutionsPartnersPage() {
     const [editDescription, setEditDescription] = useState("");
     const [editSkills, setEditSkills] = useState("");
     const [editCapacity, setEditCapacity] = useState("");
+    const [orgSearch, setOrgSearch] = useState("");
+    const [posSearch, setPosSearch] = useState("");
 
     const handleCreate = async () => {
         if (!name || !address || !contactEmail) {
@@ -247,6 +249,14 @@ export default function AdminInstitutionsPartnersPage() {
                     <div className="lg:col-span-2 space-y-6">
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-gray-900">Institutions</h2>
+                            <div className="mt-3">
+                                <input
+                                    value={orgSearch}
+                                    onChange={(e) => setOrgSearch(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                    placeholder="Search institutions"
+                                />
+                            </div>
                             {isLoading && <p className="mt-4 text-sm text-gray-500">Loading institutions...</p>}
                             {!isLoading && (!organizations || organizations.length === 0) && (
                                 <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
@@ -255,7 +265,14 @@ export default function AdminInstitutionsPartnersPage() {
                             )}
                             {!isLoading && organizations && organizations.length > 0 && (
                                 <div className="mt-4 space-y-3">
-                                    {organizations.map((org) => (
+                                    {organizations
+                                        .filter((org) =>
+                                            orgSearch
+                                                ? org.name.toLowerCase().includes(orgSearch.toLowerCase()) ||
+                                                  org.contact_email.toLowerCase().includes(orgSearch.toLowerCase())
+                                                : true
+                                        )
+                                        .map((org) => (
                                         <div key={org.id} className="rounded-xl border border-gray-200 p-4">
                                             <p className="text-sm font-medium text-gray-900">{org.name}</p>
                                             <p className="text-xs text-gray-500">{org.address}</p>
@@ -323,13 +340,28 @@ export default function AdminInstitutionsPartnersPage() {
 
                         <div className="rounded-2xl bg-white p-6 shadow-sm">
                             <h2 className="text-lg font-semibold text-gray-900">Internship Positions</h2>
+                            <div className="mt-3">
+                                <input
+                                    value={posSearch}
+                                    onChange={(e) => setPosSearch(e.target.value)}
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                                    placeholder="Search positions"
+                                />
+                            </div>
                             {!positions || positions.length === 0 ? (
                                 <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
                                     No positions yet.
                                 </div>
                             ) : (
                                 <div className="mt-4 space-y-3">
-                                    {positions.map((pos) => (
+                                    {positions
+                                        .filter((pos) =>
+                                            posSearch
+                                                ? pos.title.toLowerCase().includes(posSearch.toLowerCase()) ||
+                                                  pos.required_skills.toLowerCase().includes(posSearch.toLowerCase())
+                                                : true
+                                        )
+                                        .map((pos) => (
                                         <div key={pos.id} className="rounded-xl border border-gray-200 p-4">
                                             <p className="text-sm font-medium text-gray-900">{pos.title}</p>
                                             <p className="text-xs text-gray-500">Organization: {pos.organization}</p>

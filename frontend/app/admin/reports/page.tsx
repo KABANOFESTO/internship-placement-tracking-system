@@ -12,6 +12,9 @@ export default function AdminReportsPage() {
     const [setReportFeedback] = useSetReportFeedbackMutation();
 
     const [feedbackMap, setFeedbackMap] = useState<Record<number, string>>({});
+    const [reportSearch, setReportSearch] = useState("");
+    const [reportType, setReportType] = useState("ALL");
+    const [evaluationSearch, setEvaluationSearch] = useState("");
 
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -24,6 +27,29 @@ export default function AdminReportsPage() {
                 : `${apiBase}${report.file.startsWith("/") ? "" : "/"}${report.file}`,
         }));
     }, [reports, apiBase]);
+
+    const filteredReports = useMemo(() => {
+        let data = normalizedReports;
+        if (reportType !== "ALL") {
+            data = data.filter((report) => report.type === reportType);
+        }
+        if (!reportSearch) return data;
+        const term = reportSearch.toLowerCase();
+        return data.filter((report) =>
+            (report.student_details?.user?.username || "").toLowerCase().includes(term) ||
+            report.type.toLowerCase().includes(term)
+        );
+    }, [normalizedReports, reportSearch, reportType]);
+
+    const filteredEvaluations = useMemo(() => {
+        if (!evaluations) return [];
+        if (!evaluationSearch) return evaluations;
+        const term = evaluationSearch.toLowerCase();
+        return evaluations.filter((evaluation) =>
+            (evaluation.student_details?.user?.username || "").toLowerCase().includes(term) ||
+            evaluation.evaluation_type.toLowerCase().includes(term)
+        );
+    }, [evaluations, evaluationSearch]);
 
     const handleFeedback = async (id: number) => {
         const feedback = feedbackMap[id];
@@ -51,15 +77,32 @@ export default function AdminReportsPage() {
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <div className="rounded-2xl bg-white p-6 shadow-sm">
                         <h2 className="text-lg font-semibold text-gray-900">Reports</h2>
+                        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <input
+                                value={reportSearch}
+                                onChange={(e) => setReportSearch(e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:max-w-sm"
+                                placeholder="Search by student or type"
+                            />
+                            <select
+                                value={reportType}
+                                onChange={(e) => setReportType(e.target.value)}
+                                className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                            >
+                                <option value="ALL">All Types</option>
+                                <option value="WEEKLY">Weekly</option>
+                                <option value="FINAL">Final</option>
+                            </select>
+                        </div>
                         {isReportsLoading && <p className="mt-4 text-sm text-gray-500">Loading reports...</p>}
-                        {!isReportsLoading && normalizedReports.length === 0 && (
+                        {!isReportsLoading && filteredReports.length === 0 && (
                             <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
                                 No reports yet.
                             </div>
                         )}
-                        {!isReportsLoading && normalizedReports.length > 0 && (
+                        {!isReportsLoading && filteredReports.length > 0 && (
                             <div className="mt-4 space-y-3">
-                                {normalizedReports.map((report) => (
+                                {filteredReports.map((report) => (
                                     <div key={report.id} className="rounded-xl border border-gray-200 p-4">
                                         <div className="flex items-start justify-between">
                                             <div>
@@ -102,15 +145,23 @@ export default function AdminReportsPage() {
 
                     <div className="rounded-2xl bg-white p-6 shadow-sm">
                         <h2 className="text-lg font-semibold text-gray-900">Evaluations</h2>
+                        <div className="mt-3 flex items-center justify-between">
+                            <input
+                                value={evaluationSearch}
+                                onChange={(e) => setEvaluationSearch(e.target.value)}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:max-w-sm"
+                                placeholder="Search by student or type"
+                            />
+                        </div>
                         {isEvaluationsLoading && <p className="mt-4 text-sm text-gray-500">Loading evaluations...</p>}
-                        {!isEvaluationsLoading && (!evaluations || evaluations.length === 0) && (
+                        {!isEvaluationsLoading && filteredEvaluations.length === 0 && (
                             <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
                                 No evaluations yet.
                             </div>
                         )}
-                        {!isEvaluationsLoading && evaluations && evaluations.length > 0 && (
+                        {!isEvaluationsLoading && filteredEvaluations.length > 0 && (
                             <div className="mt-4 space-y-3">
-                                {evaluations.map((evaluation) => (
+                                {filteredEvaluations.map((evaluation) => (
                                     <div key={evaluation.id} className="rounded-xl border border-gray-200 p-4">
                                         <div className="flex items-start justify-between">
                                             <div>

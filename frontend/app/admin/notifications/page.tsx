@@ -20,6 +20,7 @@ export default function AdminNotificationsPage() {
     const [showCreate, setShowCreate] = useState(false);
     const [userId, setUserId] = useState("");
     const [message, setMessage] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const userOptions = useMemo(() => Array.isArray(users) ? users : [], [users]);
 
@@ -27,6 +28,16 @@ export default function AdminNotificationsPage() {
         if (!notifications) return 0;
         return notifications.filter((n) => !n.is_read).length;
     }, [notifications]);
+
+    const filteredNotifications = useMemo(() => {
+        if (!notifications) return [];
+        if (!searchTerm) return notifications;
+        const term = searchTerm.toLowerCase();
+        return notifications.filter((n) =>
+            n.message.toLowerCase().includes(term) ||
+            String(n.user).toLowerCase().includes(term)
+        );
+    }, [notifications, searchTerm]);
 
     const handleCreate = async () => {
         if (!userId) {
@@ -66,15 +77,26 @@ export default function AdminNotificationsPage() {
                 </div>
 
                 <div className="rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <input
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:max-w-sm"
+                            placeholder="Search by message or user ID"
+                        />
+                        <span className="text-xs text-gray-500">
+                            {filteredNotifications.length} notification{filteredNotifications.length !== 1 ? "s" : ""}
+                        </span>
+                    </div>
                     {isLoading && <p className="text-sm text-gray-500">Loading notifications...</p>}
-                    {!isLoading && (!notifications || notifications.length === 0) && (
+                    {!isLoading && filteredNotifications.length === 0 && (
                         <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
                             No notifications yet.
                         </div>
                     )}
-                    {!isLoading && notifications && notifications.length > 0 && (
+                    {!isLoading && filteredNotifications.length > 0 && (
                         <div className="space-y-4">
-                            {notifications.map((n) => (
+                            {filteredNotifications.map((n) => (
                                 <div
                                     key={n.id}
                                     className={`flex items-start justify-between rounded-xl border p-4 ${

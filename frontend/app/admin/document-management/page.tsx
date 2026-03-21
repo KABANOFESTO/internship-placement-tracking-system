@@ -17,6 +17,7 @@ export default function AdminDocumentManagementPage() {
     const [showUpload, setShowUpload] = useState(false);
     const [file, setFile] = useState<File | null>(null);
     const [name, setName] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -29,6 +30,15 @@ export default function AdminDocumentManagementPage() {
                 : `${apiBase}${doc.file.startsWith("/") ? "" : "/"}${doc.file}`,
         }));
     }, [documents, apiBase]);
+
+    const filteredDocs = useMemo(() => {
+        if (!searchTerm) return normalizedDocs;
+        const term = searchTerm.toLowerCase();
+        return normalizedDocs.filter((doc) =>
+            doc.name.toLowerCase().includes(term) ||
+            String(doc.user).toLowerCase().includes(term)
+        );
+    }, [normalizedDocs, searchTerm]);
 
     const handleUpload = async () => {
         if (!file) {
@@ -67,13 +77,24 @@ export default function AdminDocumentManagementPage() {
                 </div>
 
                 <div className="rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <input
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:max-w-sm"
+                            placeholder="Search by document name or user ID"
+                        />
+                        <div className="text-xs text-gray-500">
+                            {filteredDocs.length} document{filteredDocs.length !== 1 ? "s" : ""}
+                        </div>
+                    </div>
                     {isLoading && <p className="text-sm text-gray-500">Loading documents...</p>}
-                    {!isLoading && normalizedDocs.length === 0 && (
+                    {!isLoading && filteredDocs.length === 0 && (
                         <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
                             No documents uploaded yet.
                         </div>
                     )}
-                    {!isLoading && normalizedDocs.length > 0 && (
+                    {!isLoading && filteredDocs.length > 0 && (
                         <div className="overflow-hidden rounded-xl border border-gray-200">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
@@ -85,7 +106,7 @@ export default function AdminDocumentManagementPage() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {normalizedDocs.map((doc) => (
+                                    {filteredDocs.map((doc) => (
                                         <tr key={doc.id} className="bg-white">
                                             <td className="px-4 py-3">
                                                 <div className="flex items-center gap-2">

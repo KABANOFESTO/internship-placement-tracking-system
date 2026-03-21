@@ -15,6 +15,8 @@ export default function AdminApplicationsOverviewPage() {
 
     const [statusMap, setStatusMap] = useState<Record<string, string>>({});
     const [selected, setSelected] = useState<Record<string, boolean>>({});
+    const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState("ALL");
 
     const handleUpdateStatus = async (id: string) => {
         const status = statusMap[id];
@@ -95,6 +97,16 @@ export default function AdminApplicationsOverviewPage() {
         toast.success("Excel exported.");
     };
 
+    const filteredApplications = (applications || []).filter((app) => {
+        const matchesSearch = searchTerm
+            ? (app.student_details?.user?.username || `Student ${app.student}`).toLowerCase().includes(searchTerm.toLowerCase()) ||
+              app.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              app.status.toLowerCase().includes(searchTerm.toLowerCase())
+            : true;
+        const matchesStatus = statusFilter === "ALL" ? true : app.status === statusFilter;
+        return matchesSearch && matchesStatus;
+    });
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="p-6 lg:p-8">
@@ -134,15 +146,33 @@ export default function AdminApplicationsOverviewPage() {
                 </div>
 
                 <div className="rounded-2xl bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <input
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:max-w-sm"
+                            placeholder="Search by student, position, or status"
+                        />
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="rounded-lg border border-gray-300 px-3 py-2 text-sm"
+                        >
+                            <option value="ALL">All Status</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="APPROVED">Approved</option>
+                            <option value="REJECTED">Rejected</option>
+                        </select>
+                    </div>
                     {isLoading && <p className="text-sm text-gray-500">Loading applications...</p>}
-                    {!isLoading && (!applications || applications.length === 0) && (
+                    {!isLoading && filteredApplications.length === 0 && (
                         <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
                             No applications yet.
                         </div>
                     )}
-                    {!isLoading && applications && applications.length > 0 && (
+                    {!isLoading && filteredApplications.length > 0 && (
                         <div className="space-y-3">
-                            {applications.map((app) => (
+                            {filteredApplications.map((app) => (
                                 <div key={app.id} className="rounded-xl border border-gray-200 p-4">
                                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                         <div>
