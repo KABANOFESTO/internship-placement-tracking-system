@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo } from "react";
 import {
@@ -128,7 +128,7 @@ export default function AdminDashboard() {
                             <Activity className="h-5 w-5 text-gray-400" />
                         </div>
                         <p className="mt-3 text-sm text-gray-500">All services operational</p>
-                        <p className="mt-1 text-xs text-emerald-600">Last audit log update {auditLogs?.[0] ? formatDistanceToNow(new Date(auditLogs[0].timestamp), { addSuffix: true }) : "�"}</p>
+                        <p className="mt-1 text-xs text-emerald-600">Last audit log update {auditLogs?.[0] ? formatDistanceToNow(new Date(auditLogs[0].timestamp), { addSuffix: true }) : "—"}</p>
                     </div>
                 </div>
 

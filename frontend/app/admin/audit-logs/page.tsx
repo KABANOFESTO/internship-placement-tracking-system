@@ -1,4 +1,4 @@
-"use client";
+ï»¿"use client";
 import { useMemo, useState } from "react";
 import { AlertTriangle, Eye, Filter, Loader2 } from "lucide-react";
 import { useGetAuditLogsQuery } from "@/lib/redux/slices/AuditLogsSlice";
@@ -105,9 +105,9 @@ export default function AdminAuditLogsPage() {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{log.action}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {log.target_user || "—"}
+                                            {log.target_user || "â€”"}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.ip_address || "—"}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{log.ip_address || "â€”"}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
                                             <button className="text-gray-600 hover:text-gray-700" title="Details">
                                                 <Eye className="h-4 w-4" />
