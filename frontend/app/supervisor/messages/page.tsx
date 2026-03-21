@@ -6,7 +6,7 @@ import { useGetAllMessagesQuery, useSendMessageMutation } from "@/lib/redux/slic
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
-export default function StudentMessagesPage() {
+export default function SupervisorMessagesPage() {
     const { data: messages, isLoading } = useGetAllMessagesQuery({});
     const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
 
@@ -28,11 +28,7 @@ export default function StudentMessagesPage() {
             return;
         }
         try {
-            await sendMessage({
-                receiver: Number(receiver),
-                subject,
-                message_content: content,
-            }).unwrap();
+            await sendMessage({ receiver: Number(receiver), subject, message_content: content }).unwrap();
             toast.success("Message sent.");
             setSubject("");
             setContent("");
@@ -46,7 +42,7 @@ export default function StudentMessagesPage() {
             <div className="p-6 lg:p-8">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-900">Messages</h1>
-                    <p className="mt-1 text-sm text-gray-500">Communicate with supervisors and coordinators</p>
+                    <p className="mt-1 text-sm text-gray-500">Communicate with interns and coordinators</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -59,7 +55,6 @@ export default function StudentMessagesPage() {
                                     value={receiver}
                                     onChange={(e) => setReceiver(e.target.value)}
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="e.g. 12"
                                 />
                             </div>
                             <div>
