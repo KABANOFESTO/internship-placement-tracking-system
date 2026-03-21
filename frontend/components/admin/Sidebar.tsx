@@ -26,6 +26,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import { useGetAllUsersQuery } from "@/lib/redux/slices/AuthSlice";
+import { useGetPlacementsQuery, useGetOrganizationsQuery } from "@/lib/redux/slices/InternshipsSlice";
 
 // ── Nav config ──────────────────────────────────────────────────────────────
 const NAV_SECTIONS = [
@@ -63,7 +65,6 @@ const NAV_SECTIONS = [
         label: "System & Security",
         items: [
             { title: "Audit Logs", url: "/admin/audit-logs", icon: ScrollText },
-            { title: "Security & Permissions", url: "/admin/security", icon: Shield },
             { title: "System Settings", url: "/admin/system-settings", icon: Settings },
         ],
     },
@@ -129,6 +130,9 @@ export default function AdminSidebar() {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const pathname = usePathname();
     const { data: session } = useSession();
+    const { data: users } = useGetAllUsersQuery({});
+    const { data: placements } = useGetPlacementsQuery();
+    const { data: organizations } = useGetOrganizationsQuery();
 
     const user = session?.user;
     const initials = user
@@ -351,9 +355,9 @@ export default function AdminSidebar() {
                 {/* ── Quick-stat chips ── */}
                 <div className="relative z-10 mx-3 mt-2 mb-1 flex gap-2">
                     {[
-                        { label: "Users", value: "—", icon: Users },
-                        { label: "Active", value: "—", icon: ClipboardList },
-                        { label: "Partners", value: "—", icon: Building2 },
+                        { label: "Users", value: String(users?.length ?? 0), icon: Users },
+                        { label: "Active", value: String(placements?.length ?? 0), icon: ClipboardList },
+                        { label: "Partners", value: String(organizations?.length ?? 0), icon: Building2 },
                     ].map(({ label, value, icon: Icon }) => (
                         <div key={label} className="ad-stat-chip">
                             <Icon size={12} style={{ color: "#fde68a" }} />
@@ -444,3 +448,4 @@ export default function AdminSidebar() {
         </>
     );
 }
+
