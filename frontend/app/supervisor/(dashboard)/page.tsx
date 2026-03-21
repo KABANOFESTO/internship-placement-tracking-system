@@ -8,6 +8,7 @@ import { useGetProgressLogsQuery } from "@/lib/redux/slices/TrackingSlice";
 import { useGetEvaluationsQuery } from "@/lib/redux/slices/EvaluationsSlice";
 import { useGetReportsQuery } from "@/lib/redux/slices/ReportsSlice";
 import { useGetAttendanceStatisticsQuery } from "@/lib/redux/slices/AttendanceSlice";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 export default function SupervisorDashboard() {
     const { data: placements } = useGetPlacementsQuery();
@@ -25,6 +26,13 @@ export default function SupervisorDashboard() {
         if (!progressLogs) return [];
         return progressLogs.slice(0, 5);
     }, [progressLogs]);
+
+    const attendanceChartData = useMemo(() => {
+        if (!attendanceStats?.by_status) return [];
+        return attendanceStats.by_status.map((item) => ({ name: item.status, value: item.count }));
+    }, [attendanceStats]);
+
+    const attendanceColors = ["#22c55e", "#ef4444", "#f59e0b", "#6366f1"];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -108,6 +116,47 @@ export default function SupervisorDashboard() {
                                 No logs submitted yet.
                             </div>
                         )}
+                    </div>
+                </div>
+
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div className="rounded-2xl bg-white p-6 shadow-sm">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="text-lg font-semibold text-gray-900">Attendance Overview</h2>
+                            <CalendarCheck className="h-5 w-5 text-gray-400" />
+                        </div>
+                        {attendanceChartData.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
+                                No attendance data yet.
+                            </div>
+                        ) : (
+                            <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie data={attendanceChartData} dataKey="value" innerRadius={50} outerRadius={80}>
+                                            {attendanceChartData.map((entry, index) => (
+                                                <Cell key={entry.name} fill={attendanceColors[index % attendanceColors.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        )}
+                        <div className="mt-4 space-y-1 text-xs text-gray-500">
+                            {attendanceChartData.map((item, index) => (
+                                <div key={item.name} className="flex items-center justify-between">
+                                    <span className="flex items-center gap-2">
+                                        <span
+                                            className="inline-block h-2 w-2 rounded-full"
+                                            style={{ backgroundColor: attendanceColors[index % attendanceColors.length] }}
+                                        />
+                                        {item.name}
+                                    </span>
+                                    <span>{item.value}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

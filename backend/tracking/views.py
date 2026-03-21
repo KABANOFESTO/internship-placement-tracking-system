@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import ValidationError
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from auditlogs.audit_log_utils import log_action
 from .models import ProgressLog, Milestone
 from .serializers import ProgressLogSerializer, MilestoneSerializer
 
@@ -50,6 +51,12 @@ class ProgressLogViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
         log.approved = True
         log.save(update_fields=["approved"])
+        log_action(
+            request,
+            action="PROGRESS_LOG_APPROVED",
+            target_user=log.student.user if hasattr(log.student, "user") else None,
+            additional_data={"progress_log_id": log.id},
+        )
         return Response({"message": "Progress log approved."})
 
     @action(detail=True, methods=["post"])
@@ -59,6 +66,12 @@ class ProgressLogViewSet(viewsets.ModelViewSet):
             return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
         log.approved = False
         log.save(update_fields=["approved"])
+        log_action(
+            request,
+            action="PROGRESS_LOG_REJECTED",
+            target_user=log.student.user if hasattr(log.student, "user") else None,
+            additional_data={"progress_log_id": log.id},
+        )
         return Response({"message": "Progress log marked as not approved."})
 
     @action(detail=False, methods=["get"])

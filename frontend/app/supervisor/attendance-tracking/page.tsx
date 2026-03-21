@@ -81,6 +81,7 @@ export default function SupervisorAttendanceTrackingPage() {
                                 <label className="text-sm font-medium text-gray-700">Status</label>
                                 <select
                                     value={status}
+                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                     onChange={(e) => setStatus(e.target.value as any)}
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                 >

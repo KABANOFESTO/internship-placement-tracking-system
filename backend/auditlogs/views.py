@@ -16,3 +16,16 @@ class AuditLogListView(generics.ListAPIView):
     filterset_fields = ["action", "user", "target_user"]
     ordering_fields = ["timestamp", "action"]
     ordering = ["-timestamp"]
+
+
+class MyAuditLogListView(generics.ListAPIView):
+    serializer_class = AuditLogSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_scope = "audit"
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+    filterset_fields = ["action", "target_user"]
+    ordering_fields = ["timestamp", "action"]
+    ordering = ["-timestamp"]
+
+    def get_queryset(self):
+        return AuditLog.objects.filter(user=self.request.user).select_related("user", "target_user")

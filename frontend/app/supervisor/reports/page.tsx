@@ -5,11 +5,13 @@ import { FileText, Download, MessageSquare } from "lucide-react";
 import { useGetReportsQuery, useSetReportFeedbackMutation } from "@/lib/redux/slices/ReportsSlice";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
+import { useGetMyAuditLogsQuery } from "@/lib/redux/slices/AuditLogsSlice";
 
 export default function SupervisorReportsPage() {
     const { data: reports, isLoading } = useGetReportsQuery();
     const [setFeedback, { isLoading: isSaving }] = useSetReportFeedbackMutation();
     const [feedbackMap, setFeedbackMap] = useState<Record<number, string>>({});
+    const { data: auditLogs } = useGetMyAuditLogsQuery();
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
 
     const normalizedReports = useMemo(() => {
@@ -109,6 +111,27 @@ export default function SupervisorReportsPage() {
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="mt-6 rounded-2xl bg-white p-6 shadow-sm">
+                    <h2 className="text-lg font-semibold text-gray-900">Feedback History</h2>
+                    {!auditLogs || auditLogs.length === 0 ? (
+                        <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
+                            No feedback history yet.
+                        </div>
+                    ) : (
+                        <div className="mt-4 space-y-3">
+                            {auditLogs
+                                .filter((log) => log.action === "REPORT_FEEDBACK_SET")
+                                .slice(0, 6)
+                                .map((log) => (
+                                    <div key={log.id} className="rounded-xl border border-gray-200 p-3">
+                                        <p className="text-sm font-medium text-gray-900">{log.action}</p>
+                                        <p className="text-xs text-gray-500">{new Date(log.timestamp).toLocaleString()}</p>
+                                    </div>
+                                ))}
                         </div>
                     )}
                 </div>

@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Report
 from .serializers import ReportSerializer
+from auditlogs.audit_log_utils import log_action
 
 
 class ReportViewSet(viewsets.ModelViewSet):
@@ -40,6 +41,12 @@ class ReportViewSet(viewsets.ModelViewSet):
         feedback = request.data.get("feedback", "")
         report.feedback = feedback
         report.save(update_fields=["feedback"])
+        log_action(
+            request,
+            action="REPORT_FEEDBACK_SET",
+            target_user=report.student.user if hasattr(report.student, "user") else None,
+            additional_data={"report_id": report.id},
+        )
         return Response({"message": "Feedback updated.", "feedback": report.feedback})
 
 # Create your views here.

@@ -23,6 +23,21 @@ export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 export interface Application {
     id: string;
     student: number;
+    student_details?: {
+        id: number;
+        student_id: string;
+        program: string;
+        year_of_study: number;
+        graduation_date: string;
+        skills: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            role: string;
+            profile_picture?: string | null;
+        };
+    };
     position: string;
     cover_letter: string;
     cv: string;

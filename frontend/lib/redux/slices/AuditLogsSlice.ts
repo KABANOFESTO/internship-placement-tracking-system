@@ -17,7 +17,11 @@ export const auditLogsSlice = apiSlice.injectEndpoints({
             query: () => ({ url: "audit-logs/", method: "GET" }),
             providesTags: ["AuditLog"],
         }),
+        getMyAuditLogs: builder.query<AuditLog[], void>({
+            query: () => ({ url: "audit-logs/me/", method: "GET" }),
+            providesTags: ["AuditLog"],
+        }),
     }),
 });
 
-export const { useGetAuditLogsQuery } = auditLogsSlice;
+export const { useGetAuditLogsQuery, useGetMyAuditLogsQuery } = auditLogsSlice;
