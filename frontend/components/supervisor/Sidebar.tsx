@@ -51,7 +51,6 @@ const NAV_SECTIONS = [
     {
         label: "Help & Support",
         items: [
-            { title: "Help & Support", url: "/supervisor/help-support", icon: HelpCircle },
             { title: "System Settings", url: "/supervisor/system-settings", icon: Settings },
         ],
     },
