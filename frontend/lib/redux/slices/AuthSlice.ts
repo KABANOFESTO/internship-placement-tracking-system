@@ -44,6 +44,15 @@ const authApi = apiSlice.injectEndpoints({
                 },
             }),
         }),
+        getUsersByRole: builder.query({
+            query: (role) => ({
+                url: `auth/users/role/${role}/`,
+                method: "GET",
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access')}`,
+                },
+            }),
+        }),
         getUserById: builder.query({
             query: (id) => ({
                 url: `auth/users/${id}/`,
@@ -119,6 +128,7 @@ export const {
     useRegisterMutation,
     useUpdateProfileMutation,
     useGetAllUsersQuery,
+    useGetUsersByRoleQuery,
     useGetUserByIdQuery,
     usePatchUserByIdMutation,
     useDeleteUserByIdMutation,

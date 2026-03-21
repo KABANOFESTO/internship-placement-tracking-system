@@ -21,6 +21,7 @@ from .permissions import (
     IsAdmin,
     IsSupervisor,
     IsStudent,
+    IsAdminOrCoordinator,
     # IsAdminOrSupervisor,
     # IsAdminSupervisorOrStudent,
 )
@@ -436,6 +437,23 @@ class UserListView(generics.ListAPIView):
             request,
             "USER_LIST_ACCESS",
             additional_data={"accessed_by_role": request.user.role},
+        )
+        return super().get(request, *args, **kwargs)
+
+
+class UsersByRoleView(generics.ListAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated, IsAdminOrCoordinator]
+
+    def get_queryset(self):
+        role = self.kwargs.get("role")
+        return User.objects.filter(role__iexact=role)
+
+    def get(self, request, *args, **kwargs):
+        log_action(
+            request,
+            "USER_LIST_BY_ROLE",
+            additional_data={"accessed_by_role": request.user.role, "role": self.kwargs.get("role")},
         )
         return super().get(request, *args, **kwargs)
 
