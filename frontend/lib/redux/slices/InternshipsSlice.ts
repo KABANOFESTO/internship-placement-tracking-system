@@ -134,6 +134,14 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             query: ({ id, data }) => ({ url: `applications/${id}/`, method: "PUT", body: data }),
             invalidatesTags: ["Application"],
         }),
+        bulkUpdateApplicationStatus: builder.mutation<{ updated: number }, { ids: string[]; status: ApplicationStatus }>({
+            query: (data) => ({
+                url: "applications/bulk_status/",
+                method: "POST",
+                body: data,
+            }),
+            invalidatesTags: ["Application"],
+        }),
         deleteApplication: builder.mutation<void, string>({
             query: (id) => ({ url: `applications/${id}/`, method: "DELETE" }),
             invalidatesTags: ["Application"],
@@ -179,6 +187,7 @@ export const {
     useCreateApplicationMutation,
     useUpdateApplicationMutation,
     useDeleteApplicationMutation,
+    useBulkUpdateApplicationStatusMutation,
     useGetApplicationStatisticsQuery,
     useGetPlacementsQuery,
     useCreatePlacementMutation,

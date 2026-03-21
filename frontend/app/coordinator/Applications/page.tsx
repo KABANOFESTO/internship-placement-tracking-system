@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download } from "lucide-react";
-import { useGetApplicationsQuery, useUpdateApplicationMutation } from "@/lib/redux/slices/InternshipsSlice";
+import { useGetApplicationsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -11,8 +11,10 @@ import * as XLSX from "xlsx";
 export default function CoordinatorApplicationsPage() {
     const { data: applications, isLoading } = useGetApplicationsQuery();
     const [updateApplication] = useUpdateApplicationMutation();
+    const [bulkUpdate] = useBulkUpdateApplicationStatusMutation();
 
     const [statusMap, setStatusMap] = useState<Record<string, string>>({});
+    const [selected, setSelected] = useState<Record<string, boolean>>({});
 
     const handleUpdateStatus = async (id: string) => {
         const status = statusMap[id];
@@ -25,6 +27,23 @@ export default function CoordinatorApplicationsPage() {
             toast.success("Application updated.");
         } catch {
             toast.error("Failed to update application.");
+        }
+    };
+
+    const selectedIds = Object.entries(selected)
+        .filter(([, checked]) => checked)
+        .map(([id]) => id);
+
+    const handleBulkUpdate = async (status: "PENDING" | "APPROVED" | "REJECTED") => {
+        if (selectedIds.length === 0) {
+            toast.error("Select at least one application.");
+            return;
+        }
+        try {
+            await bulkUpdate({ ids: selectedIds, status }).unwrap();
+            toast.success("Applications updated.");
+        } catch {
+            toast.error("Failed to update applications.");
         }
     };
 
@@ -86,6 +105,18 @@ export default function CoordinatorApplicationsPage() {
                     </div>
                     <div className="flex items-center gap-2">
                         <button
+                            onClick={() => handleBulkUpdate("APPROVED")}
+                            className="inline-flex items-center rounded-lg border border-emerald-200 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50"
+                        >
+                            Bulk Approve
+                        </button>
+                        <button
+                            onClick={() => handleBulkUpdate("REJECTED")}
+                            className="inline-flex items-center rounded-lg border border-red-200 px-3 py-2 text-sm text-red-700 hover:bg-red-50"
+                        >
+                            Bulk Reject
+                        </button>
+                        <button
                             onClick={handleExportPdf}
                             className="inline-flex items-center rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                         >
@@ -115,6 +146,16 @@ export default function CoordinatorApplicationsPage() {
                                 <div key={app.id} className="rounded-xl border border-gray-200 p-4">
                                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                         <div>
+                                            <label className="mr-3 inline-flex items-center gap-2 text-xs text-gray-500">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={!!selected[app.id]}
+                                                    onChange={(e) =>
+                                                        setSelected((prev) => ({ ...prev, [app.id]: e.target.checked }))
+                                                    }
+                                                />
+                                                Select
+                                            </label>
                                             <p className="text-sm font-medium text-gray-900">
                                                 {app.student_details?.user?.username || `Student ID ${app.student}`}
                                             </p>

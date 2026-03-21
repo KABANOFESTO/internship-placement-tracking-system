@@ -18,6 +18,25 @@ export default function CoordinatorPlacementManagementPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
+    const suggestedSupervisorId = (() => {
+        if (!supervisors || supervisors.length === 0) return "";
+        if (!placements) return String(supervisors[0].id);
+        const counts: Record<number, number> = {};
+        placements.forEach((p) => {
+            if (p.supervisor) counts[p.supervisor] = (counts[p.supervisor] || 0) + 1;
+        });
+        let best = supervisors[0].id;
+        let bestCount = counts[best] || 0;
+        supervisors.forEach((sup: any) => {
+            const c = counts[sup.id] || 0;
+            if (c < bestCount) {
+                best = sup.id;
+                bestCount = c;
+            }
+        });
+        return String(best);
+    })();
+
     const handleNext = () => {
         if (step === 1 && !applicationId) {
             toast.error("Select an application first.");
@@ -140,6 +159,15 @@ export default function CoordinatorPlacementManagementPage() {
                                     </option>
                                 ))}
                             </select>
+                            {suggestedSupervisorId && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSupervisorId(suggestedSupervisorId)}
+                                    className="rounded-md border border-gray-200 px-3 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                                >
+                                    Use suggested supervisor
+                                </button>
+                            )}
                         </div>
                     )}
 

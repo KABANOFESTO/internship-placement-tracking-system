@@ -136,6 +136,17 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         by_status = Application.objects.values("status").annotate(count=models.Count("id"))
         return Response({"total": total, "by_status": list(by_status)})
 
+    @action(detail=False, methods=["post"])
+    def bulk_status(self, request):
+        if request.user.role not in ["Admin", "Coordinator"] and not request.user.is_staff:
+            return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
+        ids = request.data.get("ids", [])
+        status_value = request.data.get("status")
+        if not ids or not status_value:
+            return Response({"detail": "ids and status are required."}, status=status.HTTP_400_BAD_REQUEST)
+        updated = Application.objects.filter(id__in=ids).update(status=status_value)
+        return Response({"updated": updated})
+
 
 class PlacementViewSet(viewsets.ModelViewSet):
     queryset = Placement.objects.select_related("application", "supervisor").all()
