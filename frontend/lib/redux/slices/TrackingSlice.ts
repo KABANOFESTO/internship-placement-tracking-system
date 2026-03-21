@@ -3,6 +3,21 @@ import { apiSlice } from "./ApiSlice";
 export interface ProgressLog {
     id: number;
     student: number;
+    student_details?: {
+        id: number;
+        student_id: string;
+        program: string;
+        year_of_study: number;
+        graduation_date: string;
+        skills: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            role: string;
+            profile_picture?: string | null;
+        };
+    };
     date: string;
     hours_completed: string;
     summary: string;
@@ -45,6 +60,14 @@ export const trackingSlice = apiSlice.injectEndpoints({
             query: (id) => ({ url: `progress-logs/${id}/`, method: "DELETE" }),
             invalidatesTags: ["ProgressLog"],
         }),
+        approveProgressLog: builder.mutation<{ message: string }, number>({
+            query: (id) => ({ url: `progress-logs/${id}/approve/`, method: "POST" }),
+            invalidatesTags: ["ProgressLog"],
+        }),
+        rejectProgressLog: builder.mutation<{ message: string }, number>({
+            query: (id) => ({ url: `progress-logs/${id}/reject/`, method: "POST" }),
+            invalidatesTags: ["ProgressLog"],
+        }),
         getProgressStatistics: builder.query<ProgressStatistics, void>({
             query: () => ({ url: "progress-logs/statistics/", method: "GET" }),
             providesTags: ["Analytics"],
@@ -73,6 +96,8 @@ export const {
     useCreateProgressLogMutation,
     useUpdateProgressLogMutation,
     useDeleteProgressLogMutation,
+    useApproveProgressLogMutation,
+    useRejectProgressLogMutation,
     useGetProgressStatisticsQuery,
     useGetMilestonesQuery,
     useCreateMilestoneMutation,

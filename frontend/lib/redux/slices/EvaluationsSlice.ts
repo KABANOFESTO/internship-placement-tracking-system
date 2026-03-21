@@ -5,6 +5,21 @@ export type EvaluationType = "MIDTERM" | "FINAL";
 export interface Evaluation {
     id: number;
     student: number;
+    student_details?: {
+        id: number;
+        student_id: string;
+        program: string;
+        year_of_study: number;
+        graduation_date: string;
+        skills: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            role: string;
+            profile_picture?: string | null;
+        };
+    };
     supervisor: number | null;
     evaluation_type: EvaluationType;
     score: number;

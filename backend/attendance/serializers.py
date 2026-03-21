@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ProgressLog, Milestone
+from .models import AttendanceRecord
 from auth.models import User, StudentProfile
 
 
@@ -17,26 +17,19 @@ class StudentProfileSerializer(serializers.ModelSerializer):
         fields = ["id", "student_id", "program", "year_of_study", "graduation_date", "skills", "user"]
 
 
-class ProgressLogSerializer(serializers.ModelSerializer):
+class AttendanceRecordSerializer(serializers.ModelSerializer):
     student_details = StudentProfileSerializer(source="student", read_only=True)
 
     class Meta:
-        model = ProgressLog
+        model = AttendanceRecord
         fields = [
             "id",
             "student",
             "student_details",
-            "date",
-            "hours_completed",
-            "summary",
             "supervisor",
-            "approved",
+            "date",
+            "status",
+            "notes",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
-
-
-class MilestoneSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Milestone
-        fields = ["id", "student", "title", "description", "due_date", "completed", "completed_at"]

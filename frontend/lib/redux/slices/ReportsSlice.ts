@@ -5,6 +5,21 @@ export type ReportType = "WEEKLY" | "FINAL";
 export interface Report {
     id: number;
     student: number;
+    student_details?: {
+        id: number;
+        student_id: string;
+        program: string;
+        year_of_study: number;
+        graduation_date: string;
+        skills: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            role: string;
+            profile_picture?: string | null;
+        };
+    };
     type: ReportType;
     file: string;
     feedback?: string;
@@ -44,6 +59,14 @@ export const reportsSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ["Report"],
         }),
+        setReportFeedback: builder.mutation<{ message: string; feedback: string }, { id: number; feedback: string }>({
+            query: ({ id, feedback }) => ({
+                url: `reports/${id}/set_feedback/`,
+                method: "POST",
+                body: { feedback },
+            }),
+            invalidatesTags: ["Report"],
+        }),
     }),
 });
 
@@ -53,4 +76,5 @@ export const {
     useCreateReportMutation,
     useUpdateReportMutation,
     useDeleteReportMutation,
+    useSetReportFeedbackMutation,
 } = reportsSlice;

@@ -33,6 +33,21 @@ export interface Application {
 export interface Placement {
     id: string;
     application: string;
+    student_details?: {
+        id: number;
+        student_id: string;
+        program: string;
+        year_of_study: number;
+        graduation_date: string;
+        skills: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            role: string;
+            profile_picture?: string | null;
+        };
+    };
     supervisor: number | null;
     start_date: string;
     end_date: string;

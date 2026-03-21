@@ -116,7 +116,9 @@ export default function SupervisorEvaluationPage() {
                                     <div key={evaluation.id} className="rounded-xl border border-gray-200 p-4">
                                         <div className="flex items-start justify-between">
                                             <div>
-                                                <p className="text-sm font-medium text-gray-900">Student ID: {evaluation.student}</p>
+                                                <p className="text-sm font-medium text-gray-900">
+                                                    {evaluation.student_details?.user?.username || `Student ID: ${evaluation.student}`}
+                                                </p>
                                                 <p className="text-xs text-gray-500">Type: {evaluation.evaluation_type}</p>
                                                 <p className="text-xs text-gray-500">Score: {evaluation.score}</p>
                                                 {evaluation.feedback && (

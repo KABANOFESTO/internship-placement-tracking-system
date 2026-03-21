@@ -2,17 +2,19 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Briefcase, ClipboardCheck, FileText, TrendingUp } from "lucide-react";
+import { Briefcase, ClipboardCheck, FileText, TrendingUp, CalendarCheck } from "lucide-react";
 import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 import { useGetProgressLogsQuery } from "@/lib/redux/slices/TrackingSlice";
 import { useGetEvaluationsQuery } from "@/lib/redux/slices/EvaluationsSlice";
 import { useGetReportsQuery } from "@/lib/redux/slices/ReportsSlice";
+import { useGetAttendanceStatisticsQuery } from "@/lib/redux/slices/AttendanceSlice";
 
 export default function SupervisorDashboard() {
     const { data: placements } = useGetPlacementsQuery();
     const { data: progressLogs } = useGetProgressLogsQuery();
     const { data: evaluations } = useGetEvaluationsQuery();
     const { data: reports } = useGetReportsQuery();
+    const { data: attendanceStats } = useGetAttendanceStatisticsQuery();
 
     const totalInterns = placements ? placements.length : 0;
     const totalLogs = progressLogs ? progressLogs.length : 0;
@@ -32,12 +34,13 @@ export default function SupervisorDashboard() {
                     <p className="mt-1 text-sm text-gray-500">Track intern progress and review submissions</p>
                 </div>
 
-                <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
                     {[
                         { label: "Assigned Interns", value: totalInterns, icon: Briefcase, color: "text-blue-600", bg: "bg-blue-50" },
                         { label: "Progress Logs", value: totalLogs, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
                         { label: "Evaluations", value: totalEvaluations, icon: ClipboardCheck, color: "text-yellow-600", bg: "bg-yellow-50" },
                         { label: "Reports", value: totalReports, icon: FileText, color: "text-purple-600", bg: "bg-purple-50" },
+                        { label: "Attendance", value: attendanceStats?.total ?? 0, icon: CalendarCheck, color: "text-indigo-600", bg: "bg-indigo-50" },
                     ].map((stat) => {
                         const Icon = stat.icon;
                         return (
@@ -68,8 +71,10 @@ export default function SupervisorDashboard() {
                             <div className="space-y-3">
                                 {placements.slice(0, 5).map((placement) => (
                                     <div key={placement.id} className="rounded-xl border border-gray-200 p-3">
-                                        <p className="text-sm font-medium text-gray-900">Placement #{placement.id}</p>
-                                        <p className="text-xs text-gray-500">Application ID: {placement.application}</p>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {placement.student_details?.user?.username || `Placement #${placement.id}`}
+                                        </p>
+                                        <p className="text-xs text-gray-500">Program: {placement.student_details?.program || "N/A"}</p>
                                     </div>
                                 ))}
                             </div>
@@ -92,7 +97,9 @@ export default function SupervisorDashboard() {
                                 {recentLogs.map((log) => (
                                     <div key={log.id} className="rounded-xl border border-gray-200 p-3">
                                         <p className="text-sm font-medium text-gray-900">{log.summary}</p>
-                                        <p className="text-xs text-gray-500">Student ID: {log.student}</p>
+                                        <p className="text-xs text-gray-500">
+                                            Student: {log.student_details?.user?.username || `ID ${log.student}`}
+                                        </p>
                                     </div>
                                 ))}
                             </div>

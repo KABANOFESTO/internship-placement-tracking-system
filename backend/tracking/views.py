@@ -43,6 +43,24 @@ class ProgressLogViewSet(viewsets.ModelViewSet):
             return super().update(request, *args, **kwargs)
         return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
 
+    @action(detail=True, methods=["post"])
+    def approve(self, request, pk=None):
+        log = self.get_object()
+        if request.user.role not in ["Supervisor", "Admin", "Coordinator"] and not request.user.is_staff:
+            return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
+        log.approved = True
+        log.save(update_fields=["approved"])
+        return Response({"message": "Progress log approved."})
+
+    @action(detail=True, methods=["post"])
+    def reject(self, request, pk=None):
+        log = self.get_object()
+        if request.user.role not in ["Supervisor", "Admin", "Coordinator"] and not request.user.is_staff:
+            return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
+        log.approved = False
+        log.save(update_fields=["approved"])
+        return Response({"message": "Progress log marked as not approved."})
+
     @action(detail=False, methods=["get"])
     def statistics(self, request):
         if request.user.role not in ["Admin", "Coordinator"] and not request.user.is_staff:

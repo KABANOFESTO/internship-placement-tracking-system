@@ -24,10 +24,13 @@ export default function SupervisorAssignedInternsPage() {
                         <div className="space-y-3">
                             {placements.map((placement) => (
                                 <div key={placement.id} className="rounded-xl border border-gray-200 p-4">
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
-                                            <p className="text-sm font-medium text-gray-900">Placement #{placement.id}</p>
-                                            <p className="text-xs text-gray-500">Application ID: {placement.application}</p>
+                                            <p className="text-sm font-medium text-gray-900">
+                                                {placement.student_details?.user?.username || `Placement #${placement.id}`}
+                                            </p>
+                                            <p className="text-xs text-gray-500">Program: {placement.student_details?.program || "N/A"}</p>
+                                            <p className="text-xs text-gray-500">Student ID: {placement.student_details?.student_id || "N/A"}</p>
                                         </div>
                                         <span className={`rounded-full px-3 py-1 text-xs ${placement.confirmed ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
                                             {placement.confirmed ? "Confirmed" : "Pending"}

@@ -29,6 +29,7 @@ export const apiSlice = createApi({
         "EvaluationRating",
         "ProgressLog",
         "Milestone",
+        "Attendance",
         "Analytics",
     ],
     endpoints: () => ({}),
