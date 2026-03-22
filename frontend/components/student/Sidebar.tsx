@@ -296,18 +296,11 @@ export default function StudentSidebar() {
                     <div
                         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
                         style={{
-                            background: "linear-gradient(135deg,#2563eb,#3b82f6)",
-                            boxShadow: "0 0 16px rgba(59,130,246,0.45)",
+                            background: "transparent",
                         }}
                     >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                            <rect x="9" y="3" width="6" height="4" rx="1" />
-                            <path d="M9 14l2 2 4-4" />
-                        </svg>
                     </div>
                     <div>
-                        <div className="sora text-xs font-bold tracking-widest uppercase text-blue-400 leading-none">IPTS</div>
                         <div className="sora text-sm font-bold text-white leading-tight">Student Portal</div>
                     </div>
                 </div>
