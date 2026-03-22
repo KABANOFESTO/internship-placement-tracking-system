@@ -225,7 +225,8 @@ const HeroSection: React.FC = () => {
       `}</style>
 
             <section
-                className="hero-root relative min-h-screen flex items-center overflow-hidden"
+                id="home"
+                className="hero-root relative min-h-screen flex items-center overflow-hidden scroll-mt-28"
                 style={{ background: "linear-gradient(135deg, #06101e 0%, #0a1628 40%, #0c1f3a 70%, #081525 100%)" }}
             >
                 {/* Canvas background */}
@@ -320,3 +321,4 @@ const HeroSection: React.FC = () => {
 };
 
 export default HeroSection;
+

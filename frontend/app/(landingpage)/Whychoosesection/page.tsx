@@ -81,7 +81,7 @@ const WhyChooseSection: React.FC = () => {
         }
       `}</style>
 
-            <section className="bg-white py-20 lg:py-28 overflow-hidden">
+            <section id="why-choose" className="scroll-mt-28 bg-white py-20 lg:py-28 overflow-hidden">
                 <div className="max-w-7xl mx-auto px-6 lg:px-16">
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -225,27 +226,28 @@ export default function LoginPage() {
                     </svg>
 
                     {/* Logo */}
-                    <div className="relative z-10">
-                        <div className="flex items-center gap-3 mb-14">
-                            <div
-                                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                                style={{
-                                    background: "linear-gradient(135deg, #2563eb, #3b82f6)",
-                                    boxShadow: "0 0 18px rgba(59,130,246,0.45)",
-                                }}
-                            >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                                    <rect x="9" y="3" width="6" height="4" rx="1" />
-                                    <path d="M9 14l2 2 4-4" />
-                                </svg>
-                            </div>
-                            <div>
-                                <div className="text-xs font-bold tracking-widest uppercase text-blue-400 leading-none">IPTS</div>
-                                <div className="sora text-sm font-bold text-white leading-tight">Internship Platform</div>
-                            </div>
-                        </div>
 
+                    <div className="relative z-10">
+                        <Link href="/">
+                            <div className="flex items-center gap-3 mb-14">
+                                <div
+                                    className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                                    style={{
+                                        background: "linear-gradient(135deg, #2563eb, #3b82f6)",
+                                        boxShadow: "0 0 18px rgba(59,130,246,0.45)",
+                                    }}
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
+                                        <rect x="9" y="3" width="6" height="4" rx="1" />
+                                        <path d="M9 14l2 2 4-4" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div className="sora text-sm font-bold text-white leading-tight">Internship Platform</div>
+                                </div>
+                            </div>
+                        </Link>
                         {/* Headline */}
                         <h1 className="sora text-4xl xl:text-5xl font-extrabold leading-tight mb-5" style={{ color: "#f0f6ff" }}>
                             Manage Internships<br />

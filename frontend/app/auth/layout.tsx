@@ -17,7 +17,7 @@ export default function AuthLayout({
         <SessionProvider>
             <div className={`${workSans.className} ${workSans.variable} flex items-center justify-center min-h-screen p-4 relative`}>
                 <Image
-                    src="/images/auth-bg.png"
+                    src="/auth-bg.png"
                     alt="Background"
                     className="fixed top-0 left-0 w-full h-full object-cover z-[-1]"
                     fill

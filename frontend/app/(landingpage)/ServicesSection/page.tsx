@@ -193,7 +193,7 @@ const ServicesSection: React.FC = () => {
         }
       `}</style>
 
-            <section
+            <section id="services" className="scroll-mt-28"
                 className="services-root relative overflow-hidden py-20 lg:py-28"
                 style={{ background: "#eef2fb" }}
             >

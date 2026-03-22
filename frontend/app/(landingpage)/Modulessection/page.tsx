@@ -209,7 +209,7 @@ const ModulesSection: React.FC = () => {
         }
       `}</style>
 
-            <section className="modules-root py-20 lg:py-28" style={{ background: "#eef2fb" }}>
+            <section id="modules" className="modules-root scroll-mt-28 py-20 lg:py-28" style={{ background: "#eef2fb" }}>
                 <div className="max-w-7xl mx-auto px-6 lg:px-16">
 
                     {/* Header */}

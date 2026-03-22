@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import Link from "next/link";
 
 interface FormData {
     // User fields
@@ -350,6 +351,7 @@ export default function SignupPage() {
 
                     <div className="relative z-10">
                         {/* Logo */}
+                        <Link href="/">
                         <div className="flex items-center gap-3 mb-14">
                             <div
                                 className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -362,11 +364,10 @@ export default function SignupPage() {
                                 </svg>
                             </div>
                             <div>
-                                <div className="text-xs font-bold tracking-widest uppercase text-blue-400 leading-none">IPTS</div>
                                 <div className="sora text-sm font-bold text-white leading-tight">Internship Platform</div>
                             </div>
                         </div>
-
+                        </Link>
                         <h1 className="sora text-3xl xl:text-4xl font-extrabold leading-tight mb-4" style={{ color: "#f0f6ff" }}>
                             Start Your<br />
                             <span style={{ color: "#60a5fa" }}>Internship Journey</span>

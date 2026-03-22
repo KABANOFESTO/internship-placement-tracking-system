@@ -210,7 +210,7 @@ const HowItWorksSection: React.FC = () => {
         }
       `}</style>
 
-            <section className="hiw-root bg-white py-20 lg:py-28">
+            <section id="how-it-works" className="hiw-root scroll-mt-28 bg-white py-20 lg:py-28">
                 <div className="max-w-7xl mx-auto px-6 lg:px-16">
 
                     {/* Header */}
