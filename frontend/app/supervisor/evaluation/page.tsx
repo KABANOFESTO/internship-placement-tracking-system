@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ClipboardCheck } from "lucide-react";
 import { useGetEvaluationsQuery, useCreateEvaluationMutation } from "@/lib/redux/slices/EvaluationsSlice";
+import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
+type AssignedStudentOption = {
+    profileId: number;
+    label: string;
+};
+
 export default function SupervisorEvaluationPage() {
     const { data: evaluations, isLoading } = useGetEvaluationsQuery();
+    const { data: placements } = useGetPlacementsQuery();
     const [createEvaluation, { isLoading: isSubmitting }] = useCreateEvaluationMutation();
 
     const [studentId, setStudentId] = useState("");
@@ -15,9 +22,25 @@ export default function SupervisorEvaluationPage() {
     const [score, setScore] = useState("");
     const [feedback, setFeedback] = useState("");
 
+    const assignedStudents = useMemo<AssignedStudentOption[]>(() => {
+        const seen = new Set<number>();
+        return (placements || []).flatMap((placement) => {
+            const student = placement.student_details;
+            if (!student?.id || seen.has(student.id)) {
+                return [];
+            }
+            seen.add(student.id);
+            const username = student.user?.username || student.user?.email || `Student ${student.id}`;
+            return [{
+                profileId: student.id,
+                label: `${username} (${student.student_id || `Profile #${student.id}`})`,
+            }];
+        });
+    }, [placements]);
+
     const handleSubmit = async () => {
         if (!studentId) {
-            toast.error("Student ID is required.");
+            toast.error("Select a student.");
             return;
         }
         if (!score || Number(score) <= 0) {
@@ -35,8 +58,10 @@ export default function SupervisorEvaluationPage() {
             setStudentId("");
             setScore("");
             setFeedback("");
-        } catch {
-            toast.error("Failed to submit evaluation.");
+        } catch (error: any) {
+            const studentError = error?.data?.student?.[0];
+            const nonFieldError = error?.data?.non_field_errors?.[0];
+            toast.error(studentError || nonFieldError || "Failed to submit evaluation.");
         }
     };
 
@@ -56,13 +81,22 @@ export default function SupervisorEvaluationPage() {
                         <h2 className="text-lg font-semibold text-gray-900">New Evaluation</h2>
                         <div className="mt-4 space-y-4">
                             <div>
-                                <label className="text-sm font-medium text-gray-700">Student ID</label>
-                                <input
+                                <label className="text-sm font-medium text-gray-700">Assigned Student</label>
+                                <select
                                     value={studentId}
                                     onChange={(e) => setStudentId(e.target.value)}
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="e.g. 14"
-                                />
+                                >
+                                    <option value="">Select assigned student</option>
+                                    {assignedStudents.map((student) => (
+                                        <option key={student.profileId} value={student.profileId}>
+                                            {student.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                {assignedStudents.length === 0 && (
+                                    <p className="mt-2 text-xs text-amber-600">No assigned interns found for evaluation yet.</p>
+                                )}
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Evaluation Type</label>
@@ -94,7 +128,7 @@ export default function SupervisorEvaluationPage() {
                             </div>
                             <button
                                 onClick={handleSubmit}
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || assignedStudents.length === 0}
                                 className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
                             >
                                 {isSubmitting ? "Submitting..." : "Submit Evaluation"}

@@ -67,6 +67,12 @@ export default function StudentDashboard() {
         return notifications.filter((n) => !n.is_read).length;
     }, [notifications]);
 
+    const placementSubtext = currentPlacement
+        ? `${currentPlacement.student_details?.program || "Internship placement"}${
+              currentPlacement.supervisor_details?.user?.username ? ` with ${currentPlacement.supervisor_details.user.username}` : ""
+          }`
+        : "Awaiting placement";
+
     const recentActivity = useMemo(() => {
         const items: Array<{
             id: string;
@@ -125,7 +131,7 @@ export default function StudentDashboard() {
         {
             title: "Current Placement",
             value: currentPlacement ? "Assigned" : "Not assigned",
-            subtext: currentPlacement ? `Placement ID: ${currentPlacement.id}` : "Awaiting placement",
+            subtext: placementSubtext,
             icon: Briefcase,
             color: "text-blue-600",
             bgColor: "bg-blue-50",

@@ -33,7 +33,7 @@ export default function Header() {
                         >
                             <Image
                                 src="/logo.png"
-                                alt="Ndengera Polyclinic Logo"
+                                alt="Internaship logo"
                                 height={40}
                                 width={40}
                                 className="rounded-lg block"
@@ -41,10 +41,10 @@ export default function Header() {
                         </div>
                         <div className="flex flex-col justify-center">
                             <span className="text-[0.68rem] tracking-widest uppercase text-slate-400/80 font-normal">
-                                Ndengera Polyclinic
+                                Internaship & Placement
                             </span>
                             <span className="text-[1.05rem] font-bold text-slate-50 tracking-tight leading-tight">
-                                CleaningSys
+                                Platform
                             </span>
                         </div>
                     </Link>
@@ -70,13 +70,13 @@ export default function Header() {
                     {/* Auth Buttons — Desktop */}
                     <div className="hidden md:flex items-center gap-3">
                         <Link
-                            href="/auth/login"
+                            href="/auth"
                             className="px-5 py-2 rounded-lg text-sm font-medium text-blue-300 border border-blue-500/50 hover:bg-blue-500/10 hover:border-blue-400 hover:text-blue-200 transition-all duration-200"
                         >
                             Login
                         </Link>
                         <Link
-                            href="/auth"
+                            href="/auth/signup"
                             className="px-5 py-2 rounded-lg text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-px"
                             style={{
                                 background: 'linear-gradient(135deg, #1d4ed8, #2563eb)',
@@ -131,7 +131,7 @@ export default function Header() {
                     ))}
                     <div className="flex gap-3 pt-1">
                         <Link
-                            href="/auth/login"
+                            href="/auth"
                             onClick={() => setMenuOpen(false)}
                             className="flex-1 text-center px-4 py-2 rounded-lg text-sm font-medium text-blue-300 border border-blue-500/50 hover:bg-blue-500/10 transition-all"
                         >

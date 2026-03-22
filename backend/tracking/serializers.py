@@ -34,9 +34,15 @@ class ProgressLogSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+        extra_kwargs = {
+            "student": {"required": False},
+        }
 
 
 class MilestoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Milestone
         fields = ["id", "student", "title", "description", "due_date", "completed", "completed_at"]
+        extra_kwargs = {
+            "student": {"required": False},
+        }

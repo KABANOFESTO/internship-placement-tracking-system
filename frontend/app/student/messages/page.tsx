@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { Send } from "lucide-react";
-import { useGetAllMessagesQuery, useSendMessageMutation } from "@/lib/redux/slices/CommunicationSlices";
+import { useGetAllMessagesQuery, useGetCommunicationUsersQuery, useSendMessageMutation } from "@/lib/redux/slices/CommunicationSlices";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
 export default function StudentMessagesPage() {
     const { data: messages, isLoading } = useGetAllMessagesQuery({});
     const [sendMessage, { isLoading: isSending }] = useSendMessageMutation();
+    const { data: users, isLoading: isUsersLoading } = useGetCommunicationUsersQuery({});
 
     const [receiver, setReceiver] = useState("");
     const [subject, setSubject] = useState("");
@@ -16,7 +17,7 @@ export default function StudentMessagesPage() {
 
     const handleSend = async () => {
         if (!receiver) {
-            toast.error("Receiver ID is required.");
+            toast.error("Select a recipient.");
             return;
         }
         if (!subject.trim()) {
@@ -54,13 +55,28 @@ export default function StudentMessagesPage() {
                         <h2 className="text-lg font-semibold text-gray-900">New Message</h2>
                         <div className="mt-4 space-y-4">
                             <div>
-                                <label className="text-sm font-medium text-gray-700">Receiver User ID</label>
-                                <input
+                                <label className="text-sm font-medium text-gray-700">Receiver</label>
+                                <select
                                     value={receiver}
                                     onChange={(e) => setReceiver(e.target.value)}
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="e.g. 12"
-                                />
+                                >
+                                    <option value="">
+                                        {isUsersLoading ? "Loading users..." : "Select a recipient"}
+                                    </option>
+                                    {users?.map((user) => {
+                                        const name =
+                                            user.full_name?.trim() ||
+                                            [user.first_name, user.last_name].filter(Boolean).join(" ").trim() ||
+                                            user.username ||
+                                            user.email;
+                                        return (
+                                            <option key={user.id} value={user.id}>
+                                                {name} ({user.email})
+                                            </option>
+                                        );
+                                    })}
+                                </select>
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Subject</label>

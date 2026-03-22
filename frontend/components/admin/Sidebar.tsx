@@ -139,7 +139,7 @@ export default function AdminSidebar() {
         ? `${user.name?.split(" ")[0]?.[0] ?? ""}${user.name?.split(" ")[1]?.[0] ?? ""}`.toUpperCase()
         : "AD";
 
-    const performLogout = () => signOut({ callbackUrl: "/login" });
+    const performLogout = () => signOut({ callbackUrl: "/auth" });
 
     return (
         <>

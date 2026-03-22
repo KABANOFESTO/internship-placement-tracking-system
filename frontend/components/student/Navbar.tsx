@@ -42,7 +42,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
             }
             return userDetails.profile_picture.startsWith('/') ? userDetails.profile_picture : `/${userDetails.profile_picture}`;
         }
-        return "/profile.jfif";
+        return "/profile.png";
     };
 
     const getUserInitials = () => {
@@ -124,7 +124,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
                                     height={48}
                                     onError={(e) => {
                                         const target = e.target as HTMLImageElement;
-                                        target.src = "/profile.jfif";
+                                        target.src = "/profile.png";
                                     }}
                                 />
                             ) : (
@@ -134,7 +134,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
                             )
                         ) : sessionData?.user ? (
                             <Image
-                                src={sessionData?.user?.image || '/profile.jfif'}
+                                src={sessionData?.user?.image || '/profile.png'}
                                 alt='profile'
                                 width={40}
                                 height={40}
@@ -177,7 +177,7 @@ const Navbar = ({ onSearch }: NavbarProps) => {
                                                     height={48}
                                                     onError={(e) => {
                                                         const target = e.target as HTMLImageElement;
-                                                        target.src = "/profile.jfif";
+                                                        target.src = "/profile.png";
                                                     }}
                                                 />
                                             ) : (

@@ -1,24 +1,93 @@
 from rest_framework import serializers
-from .models import User
+from .models import CoordinatorProfile, StudentProfile, SupervisorProfile, User
 from django.contrib.auth.password_validation import validate_password
+
+
+class StudentProfileInputSerializer(serializers.Serializer):
+    student_id = serializers.CharField(max_length=50)
+    program = serializers.CharField(max_length=100)
+    year_of_study = serializers.IntegerField(min_value=1)
+    graduation_date = serializers.DateField()
+    skills = serializers.CharField(required=False, allow_blank=True)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(
         write_only=True, required=True, validators=[validate_password]
     )
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
+    student_profile = StudentProfileInputSerializer(required=False)
 
     class Meta:
         model = User
-        fields = ("username", "email", "password", "role")
+        fields = (
+            "username",
+            "email",
+            "password",
+            "role",
+            "first_name",
+            "last_name",
+            "phone",
+            "student_profile",
+        )
+
+    def validate_role(self, value):
+        if not value:
+            raise serializers.ValidationError("Role is required.")
+
+        normalized = value.strip().lower()
+        role_map = {
+            "admin": User.Role.ADMIN,
+            "administrator": User.Role.ADMIN,
+            "supervisor": User.Role.SUPERVISOR,
+            "coordinator": User.Role.COORDINATOR,
+            "student": User.Role.STUDENT,
+        }
+        if normalized not in role_map:
+            raise serializers.ValidationError("Invalid role.")
+        return role_map[normalized]
 
     def create(self, validated_data):
+        student_profile = validated_data.pop("student_profile", None)
+        first_name = validated_data.pop("first_name", "")
+        last_name = validated_data.pop("last_name", "")
+        phone = validated_data.pop("phone", "")
+
         user = User.objects.create_user(
             username=validated_data.get("username"),
             email=validated_data["email"],
             password=validated_data["password"],
             role=validated_data["role"],
         )
+        if first_name:
+            user.first_name = first_name
+        if last_name:
+            user.last_name = last_name
+        if phone:
+            user.phone = phone
+        user.save(update_fields=["first_name", "last_name", "phone"])
+
+        if user.role == User.Role.STUDENT and student_profile:
+            StudentProfile.objects.create(
+                user=user,
+                student_id=student_profile.get("student_id", ""),
+                program=student_profile.get("program", ""),
+                year_of_study=student_profile.get("year_of_study", 1),
+                graduation_date=student_profile.get("graduation_date"),
+                skills=student_profile.get("skills", ""),
+            )
+        elif user.role == User.Role.SUPERVISOR:
+            SupervisorProfile.objects.get_or_create(
+                user=user,
+                defaults={"organization": "", "position": ""},
+            )
+        elif user.role == User.Role.COORDINATOR:
+            CoordinatorProfile.objects.get_or_create(
+                user=user,
+                defaults={"department": ""},
+            )
         return user
 
 
@@ -39,11 +108,25 @@ class AdminUserCreateSerializer(serializers.ModelSerializer):
             role=validated_data["role"],
             status=validated_data.get("status", User.Status.ACTIVE),
         )
+        if user.role == User.Role.SUPERVISOR:
+            SupervisorProfile.objects.get_or_create(
+                user=user,
+                defaults={"organization": "", "position": ""},
+            )
+        elif user.role == User.Role.COORDINATOR:
+            CoordinatorProfile.objects.get_or_create(
+                user=user,
+                defaults={"department": ""},
+            )
         user.temporary_password = password
         return user
 
 
 class UserSerializer(serializers.ModelSerializer):
+    student_profile_id = serializers.SerializerMethodField()
+    supervisor_profile_id = serializers.SerializerMethodField()
+    coordinator_profile_id = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
@@ -54,8 +137,31 @@ class UserSerializer(serializers.ModelSerializer):
             "status",
             "is_active",
             "profile_picture",
+            "first_name",
+            "last_name",
+            "phone",
+            "student_profile_id",
+            "supervisor_profile_id",
+            "coordinator_profile_id",
         )
         read_only_fields = ("is_active",)
+
+    def get_student_profile_id(self, obj):
+        profile = getattr(obj, "studentprofile", None)
+        return profile.id if profile else None
+
+    def get_supervisor_profile_id(self, obj):
+        profile = getattr(obj, "supervisorprofile", None)
+        if not profile and obj.role == User.Role.SUPERVISOR:
+            profile, _ = SupervisorProfile.objects.get_or_create(
+                user=obj,
+                defaults={"organization": "", "position": ""},
+            )
+        return profile.id if profile else None
+
+    def get_coordinator_profile_id(self, obj):
+        profile = getattr(obj, "coordinatorprofile", None)
+        return profile.id if profile else None
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):

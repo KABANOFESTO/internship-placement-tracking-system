@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import React, { useEffect, useRef } from "react";
 
 interface StatCardProps {
@@ -289,12 +290,16 @@ const HeroSection: React.FC = () => {
                             className="flex flex-wrap gap-4 mb-16 animate-fadeUp"
                             style={{ animationDelay: "0.4s" }}
                         >
-                            <button className="hero-btn-primary px-7 py-3 rounded-xl text-sm">
-                                Apply for Internship
-                            </button>
-                            <button className="hero-btn-secondary px-7 py-3 rounded-xl text-sm">
-                                Coordinator Login
-                            </button>
+                            <Link href="/auth/signup">
+                                <button className="hero-btn-primary px-7 py-3 rounded-xl text-sm">
+                                    Apply for Internship
+                                </button>
+                            </Link>
+                            <Link href="/auth">
+                                <button className="hero-btn-secondary px-7 py-3 rounded-xl text-sm">
+                                    Coordinator Login
+                                </button>
+                            </Link>
                         </div>
 
                         {/* Stats */}

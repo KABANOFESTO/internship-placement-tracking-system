@@ -17,7 +17,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "1",
             label: "Register & Complete Your Profile",
-            image: "/example.jpg",
+            image: "/user.JPG",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -28,7 +28,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "2",
             label: "Submit Your Internship Application",
-            image: "/example.jpg",
+            image: "/apply.png",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -39,7 +39,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "3",
             label: "Get Placed & Track Your Progress",
-            image: "/example.jpg",
+            image: "/track.jfif ",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
@@ -50,7 +50,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "4",
             label: "Submit Reports & View Evaluations",
-            image: "/example.jpg",
+            image: "/reports.jpg",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M9 11l3 3L22 4" />
@@ -63,7 +63,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "1",
             label: "Register & Set Up Your Profile",
-            image: "/example.jpg",
+            image: "/user.JPG",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
@@ -74,7 +74,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "2",
             label: "Review & Accept Assigned Interns",
-            image: "/example.jpg",
+            image: "/evaluation.png",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
@@ -86,7 +86,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "3",
             label: "Monitor Progress & Give Feedback",
-            image: "/example.jpg",
+            image: "/monitor.jpg",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="10" />
@@ -97,7 +97,7 @@ const steps: Record<Role, Step[]> = {
         {
             number: "4",
             label: "Submit Mid-Term & Final Evaluations",
-            image: "/example.jpg",
+            image: "/evaluations.jpg",
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />

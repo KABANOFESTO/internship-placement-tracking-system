@@ -17,7 +17,7 @@ interface Module {
 const modules: Module[] = [
     {
         category: "Student Portal",
-        image: "/example.jpg",
+        image: "/apply.png",
         title: "Internship Applications",
         description:
             "Apply online with auto-filled academic profiles, upload CVs and cover letters, and track your application status in real time.",
@@ -28,7 +28,7 @@ const modules: Module[] = [
     },
     {
         category: "Student Portal",
-        image: "/example.jpg",
+        image: "/track.jfif",
         title: "Progress Tracking",
         description:
             "Log daily tasks, submit weekly timesheets, and track milestone achievements from your personal internship dashboard.",
@@ -39,7 +39,7 @@ const modules: Module[] = [
     },
     {
         category: "Student Portal",
-        image: "/example.jpg",
+        image: "/r-submit.jfif",
         title: "Report Submissions",
         description:
             "Submit weekly, monthly, and final internship reports online. Includes plagiarism checks, versioning, and deadline reminders.",
@@ -51,7 +51,7 @@ const modules: Module[] = [
     // ── Row 2: Coordinator/Supervisor-facing ──
     {
         category: "Coordinator Tools",
-        image: "/example.jpg",
+        image: "/skills.png",
         title: "Skill-Based Placement",
         description:
             "Automated matching recommendations based on academic competencies, preferred departments, and supervisor workload.",
@@ -62,7 +62,7 @@ const modules: Module[] = [
     },
     {
         category: "Coordinator Tools",
-        image: "/example.jpg",
+        image: "/evaluation.png",
         title: "Supervisor Evaluations",
         description:
             "Structured mid-term and final evaluation forms with skill rubrics, attendance scores, and qualitative feedback fields.",
@@ -73,7 +73,7 @@ const modules: Module[] = [
     },
     {
         category: "Coordinator Tools",
-        image: "/example.jpg",
+        image: "/analytics.jpg",
         title: "Analytics & Reporting",
         description:
             "Dashboards with placement success rates, student performance distributions, and department-level insights exportable to PDF or Excel.",

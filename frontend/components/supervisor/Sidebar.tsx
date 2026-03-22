@@ -122,7 +122,7 @@ export default function SupervisorSidebar() {
         ? `${user.name?.split(" ")[0]?.[0] ?? ""}${user.name?.split(" ")[1]?.[0] ?? ""}`.toUpperCase()
         : "SV";
 
-    const performLogout = () => signOut({ callbackUrl: "/login" });
+    const performLogout = () => signOut({ callbackUrl: "/auth" });
 
     return (
         <>

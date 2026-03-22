@@ -5,6 +5,13 @@ import { useGetApplicationsQuery, useCreatePlacementMutation, useGetPlacementsQu
 import { useGetUsersByRoleQuery } from "@/lib/redux/slices/AuthSlice";
 import { toast } from "sonner";
 
+type SupervisorOption = {
+    id: number;
+    username: string;
+    email: string;
+    supervisor_profile_id?: number | null;
+};
+
 export default function CoordinatorPlacementManagementPage() {
     const { data: applications } = useGetApplicationsQuery();
     const { data: placements } = useGetPlacementsQuery();
@@ -18,19 +25,23 @@ export default function CoordinatorPlacementManagementPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
+    const supervisorOptions: SupervisorOption[] = (supervisors || []) as SupervisorOption[];
+
     const suggestedSupervisorId = (() => {
-        if (!supervisors || supervisors.length === 0) return "";
-        if (!placements) return String(supervisors[0].id);
+        const availableSupervisors = supervisorOptions.filter((sup) => sup.supervisor_profile_id);
+        if (availableSupervisors.length === 0) return "";
+        if (!placements) return String(availableSupervisors[0].supervisor_profile_id);
         const counts: Record<number, number> = {};
         placements.forEach((p) => {
             if (p.supervisor) counts[p.supervisor] = (counts[p.supervisor] || 0) + 1;
         });
-        let best = supervisors[0].id;
+        let best = availableSupervisors[0].supervisor_profile_id as number;
         let bestCount = counts[best] || 0;
-        supervisors.forEach((sup: any) => {
-            const c = counts[sup.id] || 0;
+        availableSupervisors.forEach((sup) => {
+            const profileId = sup.supervisor_profile_id as number;
+            const c = counts[profileId] || 0;
             if (c < bestCount) {
-                best = sup.id;
+                best = profileId;
                 bestCount = c;
             }
         });
@@ -54,6 +65,15 @@ export default function CoordinatorPlacementManagementPage() {
             toast.error("Application and dates are required.");
             return;
         }
+        if (supervisorId) {
+            const selectedSupervisor = supervisorOptions.find(
+                (sup) => String(sup.supervisor_profile_id) === supervisorId,
+            );
+            if (!selectedSupervisor?.supervisor_profile_id) {
+                toast.error("Selected supervisor does not have a supervisor profile yet.");
+                return;
+            }
+        }
         try {
             await createPlacement({
                 application: applicationId,
@@ -68,8 +88,9 @@ export default function CoordinatorPlacementManagementPage() {
             setStartDate("");
             setEndDate("");
             setStep(1);
-        } catch {
-            toast.error("Failed to create placement.");
+        } catch (error: any) {
+            const supervisorError = error?.data?.supervisor?.[0];
+            toast.error(supervisorError || "Failed to create placement.");
         }
     };
 
@@ -153,9 +174,13 @@ export default function CoordinatorPlacementManagementPage() {
                                 className="w-full rounded-lg border border-gray-300 px-3 py-2"
                             >
                                 <option value="">Select supervisor</option>
-                                {supervisors?.map((sup: any) => (
-                                    <option key={sup.id} value={sup.id}>
-                                        {sup.username} ({sup.email})
+                                {supervisorOptions.map((sup) => (
+                                    <option
+                                        key={sup.id}
+                                        value={sup.supervisor_profile_id ?? ""}
+                                        disabled={!sup.supervisor_profile_id}
+                                    >
+                                        {sup.username} ({sup.email}){!sup.supervisor_profile_id ? " - profile missing" : ""}
                                     </option>
                                 ))}
                             </select>

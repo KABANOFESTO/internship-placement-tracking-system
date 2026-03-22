@@ -69,6 +69,13 @@ export default function LoginPage() {
                 const userRole = session?.user?.role || "Student";
                 const redirectPath = getRedirectPath(userRole);
 
+                if (session?.user?.token) {
+                    localStorage.setItem("access", session.user.token);
+                }
+                if (session?.user?.refreshToken) {
+                    localStorage.setItem("refresh", session.user.refreshToken);
+                }
+
                 toast.success(`${getRoleIcon(userRole)} ${getRoleMessage(userRole)}`, {
                     duration: 3000,
                     style: {
@@ -274,12 +281,6 @@ export default function LoginPage() {
                             ))}
                         </div>
                     </div>
-
-                    {/* Bottom WHO badge */}
-                    <div className="relative z-10 flex items-center gap-2 mt-10">
-                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.7)" }} />
-                        <span className="text-xs" style={{ color: "#64748b" }}>WHO Hygiene Compliance Ready · Ndengera Polyclinic</span>
-                    </div>
                 </div>
 
                 {/* ══════════════════════════════
@@ -385,9 +386,6 @@ export default function LoginPage() {
                                     <circle cx="12" cy="12" r="10" />
                                     <path d="M12 16v-4M12 8h.01" />
                                 </svg>
-                                <p style={{ color: "#475569" }}>
-                                    Your role (Student · Supervisor · Coordinator · Admin) is determined automatically after sign-in.
-                                </p>
                             </div>
 
                             {/* Submit */}
@@ -419,7 +417,7 @@ export default function LoginPage() {
 
                         {/* Register link */}
                         <a
-                            href="/register"
+                            href="/auth/signup"
                             className="block w-full text-center py-3 rounded-xl text-sm font-semibold transition-all duration-200"
                             style={{
                                 border: "1.5px solid #dde6f8",

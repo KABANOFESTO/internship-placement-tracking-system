@@ -161,7 +161,7 @@ const AboutSection: React.FC = () => {
                             {/* Main image */}
                             <div className="image-wrapper shadow-2xl" style={{ boxShadow: "0 24px 64px rgba(37,99,235,0.15)" }}>
                                 <Image
-                                    src="/example.jpg"
+                                    src="/student.jpg"
                                     alt="Students engaged in internship activities"
                                     width={680}
                                     height={520}

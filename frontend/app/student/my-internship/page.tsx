@@ -20,6 +20,11 @@ export default function MyInternshipPage() {
         return progressLogs.reduce((sum, log) => sum + parseFloat(log.hours_completed || "0"), 0);
     }, [progressLogs]);
 
+    const supervisorName =
+        placement?.supervisor_details?.user?.username ||
+        placement?.supervisor_details?.user?.email ||
+        null;
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="p-6 lg:p-8">
@@ -41,13 +46,9 @@ export default function MyInternshipPage() {
                         )}
                         {placement && (
                             <div className="mt-4 space-y-3 text-sm text-gray-600">
-                                <div>Placement ID: {placement.id}</div>
-                                <div>Application ID: {placement.application}</div>
-                                {placement.supervisor ? (
-                                    <div>Supervisor: User #{placement.supervisor}</div>
-                                ) : (
-                                    <div>Supervisor: Pending assignment</div>
-                                )}
+                                <div>Program: {placement.student_details?.program || "Not available"}</div>
+                                <div>Status: {placement.confirmed ? "Confirmed" : "Pending confirmation"}</div>
+                                <div>Supervisor: {supervisorName || "Pending assignment"}</div>
                                 <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4" />
                                     {format(new Date(placement.start_date), "MMM dd, yyyy")} - {format(new Date(placement.end_date), "MMM dd, yyyy")}

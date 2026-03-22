@@ -94,7 +94,7 @@ const WhyChooseSection: React.FC = () => {
                             }}
                         >
                             <Image
-                                src="/example.jpg"
+                                src="/why.jpg"
                                 alt="Student working at a healthcare internship"
                                 width={680}
                                 height={720}

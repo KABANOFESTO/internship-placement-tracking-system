@@ -137,7 +137,7 @@ export default function SignupPage() {
                 email: form.email,
                 phone: form.phone,
                 password: form.password,
-                role: "STUDENT",           // always Student on self-registration
+                role: "Student",           // always Student on self-registration
                 student_profile: {
                     student_id: form.student_id,
                     program: form.program,
@@ -147,15 +147,22 @@ export default function SignupPage() {
                 },
             };
 
-            const res = await fetch("/api/auth/register", {
+            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+            const res = await fetch(`${apiBase}/api/auth/register/`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
             });
 
             if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data?.message || "Registration failed.");
+                let message = "Registration failed.";
+                try {
+                    const data = await res.json();
+                    message = data?.message || data?.error || message;
+                } catch {
+                    // keep default message when response is not JSON
+                }
+                throw new Error(message);
             }
 
             toast.success("🎓 Account created! Please sign in.", {
@@ -167,7 +174,7 @@ export default function SignupPage() {
                     fontWeight: "600",
                 },
             });
-            setTimeout(() => router.push("/login"), 1800);
+            setTimeout(() => router.push("/auth"), 1800);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
             toast.error(err.message || "Something went wrong. Please try again.", {
@@ -390,11 +397,6 @@ export default function SignupPage() {
                             ))}
                         </div>
                     </div>
-
-                    <div className="relative z-10 flex items-center gap-2 mt-8">
-                        <span className="w-2 h-2 rounded-full" style={{ background: "#22c55e", boxShadow: "0 0 6px rgba(34,197,94,0.7)" }} />
-                        <span className="text-xs" style={{ color: "#64748b" }}>Ndengera Polyclinic · WHO Compliance Ready</span>
-                    </div>
                 </div>
 
                 {/* ══════════════ RIGHT PANEL ══════════════ */}
@@ -476,15 +478,6 @@ export default function SignupPage() {
                                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Phone Number <span className="text-slate-400 font-normal">(optional)</span></label>
                                     <input type="tel" className="inp w-full px-4 py-2.5 rounded-xl text-sm" placeholder="+250 7XX XXX XXX" value={form.phone} onChange={e => set("phone", e.target.value)} />
                                 </div>
-
-                                {/* Role notice */}
-                                <div className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm" style={{ background: "#f0f4ff", border: "1px solid #dde6f8" }}>
-                                    <span className="text-base flex-shrink-0">🎓</span>
-                                    <p style={{ color: "#475569" }}>
-                                        Your account will be registered as a <strong>Student</strong>. Supervisors and coordinators are added by an administrator.
-                                    </p>
-                                </div>
-
                                 <button type="button" onClick={nextStep} className="btn-primary w-full text-white font-semibold py-3 rounded-xl text-sm mt-1">
                                     Continue to Academic Info →
                                 </button>
@@ -669,7 +662,7 @@ export default function SignupPage() {
                         {/* Sign in link */}
                         <p className="text-center text-sm mt-6" style={{ color: "#94a3b8" }}>
                             Already have an account?{" "}
-                            <a href="/login" className="font-semibold transition-colors" style={{ color: "#2563eb" }}
+                            <a href="/auth" className="font-semibold transition-colors" style={{ color: "#2563eb" }}
                                 onMouseEnter={e => (e.currentTarget.style.textDecoration = "underline")}
                                 onMouseLeave={e => (e.currentTarget.style.textDecoration = "none")}
                             >

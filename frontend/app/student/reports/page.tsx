@@ -29,8 +29,11 @@ export default function StudentReportsPage() {
             await createReport(formData).unwrap();
             toast.success("Report submitted.");
             setFile(null);
-        } catch {
-            toast.error("Failed to submit report.");
+        } catch (error: any) {
+            const studentError = error?.data?.student?.[0];
+            const fileError = error?.data?.file?.[0];
+            const typeError = error?.data?.type?.[0];
+            toast.error(studentError || fileError || typeError || "Failed to submit report.");
         }
     };
 

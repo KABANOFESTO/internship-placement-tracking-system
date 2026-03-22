@@ -71,7 +71,7 @@ class AdminUserCreateView(generics.CreateAPIView):
 
         try:
             frontend_login_url = getattr(
-                settings, "FRONTEND_LOGIN_URL", "http://localhost:3000/login"
+                settings, "FRONTEND_LOGIN_URL", "http://localhost:3000/auth"
             )
 
             send_mail(

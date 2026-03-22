@@ -20,24 +20,35 @@ export interface InternshipPosition {
 
 export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
 
+export interface UserSummary {
+    id: number;
+    username: string;
+    email: string;
+    role: string;
+    profile_picture?: string | null;
+}
+
+export interface StudentDetails {
+    id: number;
+    student_id: string;
+    program: string;
+    year_of_study: number;
+    graduation_date: string;
+    skills: string;
+    user?: UserSummary;
+}
+
+export interface SupervisorDetails {
+    id: number;
+    organization: string;
+    position: string;
+    user?: UserSummary;
+}
+
 export interface Application {
     id: string;
     student: number;
-    student_details?: {
-        id: number;
-        student_id: string;
-        program: string;
-        year_of_study: number;
-        graduation_date: string;
-        skills: string;
-        user?: {
-            id: number;
-            username: string;
-            email: string;
-            role: string;
-            profile_picture?: string | null;
-        };
-    };
+    student_details?: StudentDetails;
     position: string;
     cover_letter: string;
     cv: string;
@@ -48,22 +59,9 @@ export interface Application {
 export interface Placement {
     id: string;
     application: string;
-    student_details?: {
-        id: number;
-        student_id: string;
-        program: string;
-        year_of_study: number;
-        graduation_date: string;
-        skills: string;
-        user?: {
-            id: number;
-            username: string;
-            email: string;
-            role: string;
-            profile_picture?: string | null;
-        };
-    };
+    student_details?: StudentDetails;
     supervisor: number | null;
+    supervisor_details?: SupervisorDetails | null;
     start_date: string;
     end_date: string;
     confirmed: boolean;
@@ -131,7 +129,7 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             invalidatesTags: ["Application"],
         }),
         updateApplication: builder.mutation<Application, { id: string; data: Partial<Application> }>({
-            query: ({ id, data }) => ({ url: `applications/${id}/`, method: "PUT", body: data }),
+            query: ({ id, data }) => ({ url: `applications/${id}/`, method: "PATCH", body: data }),
             invalidatesTags: ["Application"],
         }),
         bulkUpdateApplicationStatus: builder.mutation<{ updated: number }, { ids: string[]; status: ApplicationStatus }>({

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download } from "lucide-react";
-import { useGetApplicationsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
+import { useGetApplicationsQuery, useGetPositionsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -10,6 +10,7 @@ import * as XLSX from "xlsx";
 
 export default function AdminApplicationsOverviewPage() {
     const { data: applications, isLoading } = useGetApplicationsQuery();
+    const { data: positions } = useGetPositionsQuery();
     const [updateApplication] = useUpdateApplicationMutation();
     const [bulkUpdate] = useBulkUpdateApplicationStatusMutation();
 
@@ -49,6 +50,16 @@ export default function AdminApplicationsOverviewPage() {
         }
     };
 
+    const positionMap = new Map((positions || []).map((pos) => [pos.id, pos.title]));
+
+    const resolvePositionTitle = (positionId: string) =>
+        positionMap.get(positionId) || positionId;
+
+    const resolveStudentName = (app: { student_details?: { user?: { username?: string; email?: string } }; student?: number }) =>
+        app.student_details?.user?.username ||
+        app.student_details?.user?.email ||
+        `Student ${app.student}`;
+
     const handleExportPdf = () => {
         if (!applications || applications.length === 0) {
             toast.error("No applications to export.");
@@ -65,8 +76,8 @@ export default function AdminApplicationsOverviewPage() {
             head: [["ID", "Student", "Position", "Status", "Created"]],
             body: applications.map((app) => [
                 app.id,
-                app.student_details?.user?.username || `Student ${app.student}`,
-                app.position,
+                resolveStudentName(app),
+                resolvePositionTitle(app.position),
                 app.status,
                 new Date(app.created_at).toLocaleDateString(),
             ]),
@@ -85,8 +96,8 @@ export default function AdminApplicationsOverviewPage() {
         }
         const data = applications.map((app) => ({
             id: app.id,
-            student: app.student_details?.user?.username || `Student ${app.student}`,
-            position: app.position,
+            student: resolveStudentName(app),
+            position: resolvePositionTitle(app.position),
             status: app.status,
             created_at: app.created_at,
         }));
@@ -99,8 +110,8 @@ export default function AdminApplicationsOverviewPage() {
 
     const filteredApplications = (applications || []).filter((app) => {
         const matchesSearch = searchTerm
-            ? (app.student_details?.user?.username || `Student ${app.student}`).toLowerCase().includes(searchTerm.toLowerCase()) ||
-              app.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            ? resolveStudentName(app).toLowerCase().includes(searchTerm.toLowerCase()) ||
+              resolvePositionTitle(app.position).toLowerCase().includes(searchTerm.toLowerCase()) ||
               app.status.toLowerCase().includes(searchTerm.toLowerCase())
             : true;
         const matchesStatus = statusFilter === "ALL" ? true : app.status === statusFilter;
@@ -187,9 +198,9 @@ export default function AdminApplicationsOverviewPage() {
                                                 Select
                                             </label>
                                             <p className="text-sm font-medium text-gray-900">
-                                                {app.student_details?.user?.username || `Student ID ${app.student}`}
+                                                {resolveStudentName(app)}
                                             </p>
-                                            <p className="text-xs text-gray-500">Position: {app.position}</p>
+                                            <p className="text-xs text-gray-500">Position: {resolvePositionTitle(app.position)}</p>
                                             <p className="text-xs text-gray-500">Status: {app.status}</p>
                                         </div>
                                         <div className="flex items-center gap-2">

@@ -132,7 +132,7 @@ export default function CoordinatorSidebar() {
         ? `${user.name?.split(" ")[0]?.[0] ?? ""}${user.name?.split(" ")[1]?.[0] ?? ""}`.toUpperCase()
         : "CO";
 
-    const performLogout = () => signOut({ callbackUrl: "/login" });
+    const performLogout = () => signOut({ callbackUrl: "/auth" });
 
     return (
         <>

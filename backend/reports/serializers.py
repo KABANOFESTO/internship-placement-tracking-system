@@ -24,3 +24,6 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = ["id", "student", "student_details", "type", "file", "feedback", "submitted_at"]
         read_only_fields = ["id", "submitted_at"]
+        extra_kwargs = {
+            "student": {"required": False},
+        }

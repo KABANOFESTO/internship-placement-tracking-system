@@ -162,36 +162,19 @@ const Footer: React.FC = () => {
                             </div>
                             <div>
                                 <p className="text-xs font-bold tracking-widest uppercase text-blue-500 leading-none">
-                                    Ndengera
+                                    Internship & Placement
                                 </p>
                                 <p className="text-base font-bold text-slate-100 leading-tight">
-                                    Polyclinic
+                                    Platform
                                 </p>
                             </div>
                         </div>
 
                         <p className="text-sm leading-relaxed mb-6 max-w-xs" style={{ color: '#6b7a90' }}>
-                            A digital hygiene management platform built to streamline cleaning
+                            A platform built to streamline internship
                             operations, enforce compliance standards, and empower supervisors
                             with real-time insights.
                         </p>
-
-                        {/* WHO badge */}
-                        <div
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md"
-                            style={{
-                                border: '1px solid rgba(34,197,94,0.22)',
-                                background: 'rgba(34,197,94,0.06)',
-                            }}
-                        >
-                            <span
-                                className="w-2 h-2 rounded-full flex-shrink-0"
-                                style={{ background: '#22c55e', boxShadow: '0 0 6px rgba(34,197,94,0.6)' }}
-                            />
-                            <span className="text-xs tracking-wide" style={{ color: '#6b7a90' }}>
-                                WHO Hygiene Compliance Ready
-                            </span>
-                        </div>
                     </div>
 
                     {/* Quick Links */}
@@ -245,7 +228,7 @@ const Footer: React.FC = () => {
                                 className="text-sm no-underline transition-colors duration-200 hover:text-slate-200"
                                 style={{ color: '#8b9ab0' }}
                             >
-                                admin@ndengera-clinic.rw
+                                admin@internship-platform.rw
                             </a>
                             <a
                                 href="tel:+250788000000"
@@ -258,7 +241,7 @@ const Footer: React.FC = () => {
                                 Mon – Sat: 7:00 AM – 6:00 PM
                             </p>
                             <p className="text-sm m-0" style={{ color: '#8b9ab0' }}>
-                                Ndengera Polyclinic, Kigali, Rwanda
+                                Internship & Placement Platform, Kigali, Rwanda
                             </p>
                         </div>
                     </div>
@@ -277,7 +260,7 @@ const Footer: React.FC = () => {
                             <path d="M14.83 14.83A4 4 0 119.17 9.17" />
                         </svg>
                         <span className="text-sm" style={{ color: '#4b5a6e' }}>
-                            {currentYear} Ndengera Polyclinic — Cleaning Staff Management System. All rights reserved.
+                            {currentYear} Internship & Placement Platform — All rights reserved.
                         </span>
                     </div>
 

@@ -125,7 +125,7 @@ export default function StudentSidebar() {
 
     const handleLogout = () => setConfirmOpen(true);
     const performLogout = () => {
-        signOut({ callbackUrl: "/login" });
+        signOut({ callbackUrl: "/auth" });
     };
 
     return (

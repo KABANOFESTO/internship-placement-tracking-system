@@ -1,16 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CalendarCheck } from "lucide-react";
 import {
     useGetAttendanceRecordsQuery,
     useCreateAttendanceRecordMutation,
 } from "@/lib/redux/slices/AttendanceSlice";
+import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
+type AssignedStudentOption = {
+    profileId: number;
+    label: string;
+};
+
 export default function SupervisorAttendanceTrackingPage() {
     const { data: records, isLoading } = useGetAttendanceRecordsQuery();
+    const { data: placements } = useGetPlacementsQuery();
     const [createRecord, { isLoading: isSaving }] = useCreateAttendanceRecordMutation();
 
     const [studentId, setStudentId] = useState("");
@@ -18,9 +25,25 @@ export default function SupervisorAttendanceTrackingPage() {
     const [status, setStatus] = useState<"PRESENT" | "ABSENT" | "LATE" | "EXCUSED">("PRESENT");
     const [notes, setNotes] = useState("");
 
+    const assignedStudents = useMemo<AssignedStudentOption[]>(() => {
+        const seen = new Set<number>();
+        return (placements || []).flatMap((placement) => {
+            const student = placement.student_details;
+            if (!student?.id || seen.has(student.id)) {
+                return [];
+            }
+            seen.add(student.id);
+            const username = student.user?.username || student.user?.email || `Student ${student.id}`;
+            return [{
+                profileId: student.id,
+                label: `${username} (${student.student_id || `Profile #${student.id}`})`,
+            }];
+        });
+    }, [placements]);
+
     const handleCreate = async () => {
         if (!studentId) {
-            toast.error("Student ID is required.");
+            toast.error("Select a student.");
             return;
         }
         if (!date) {
@@ -39,8 +62,10 @@ export default function SupervisorAttendanceTrackingPage() {
             setDate("");
             setStatus("PRESENT");
             setNotes("");
-        } catch {
-            toast.error("Failed to save attendance.");
+        } catch (error: any) {
+            const studentError = error?.data?.student?.[0];
+            const nonFieldError = error?.data?.non_field_errors?.[0];
+            toast.error(studentError || nonFieldError || "Failed to save attendance.");
         }
     };
 
@@ -60,13 +85,22 @@ export default function SupervisorAttendanceTrackingPage() {
                         <h2 className="text-lg font-semibold text-gray-900">New Attendance</h2>
                         <div className="mt-4 space-y-4">
                             <div>
-                                <label className="text-sm font-medium text-gray-700">Student ID</label>
-                                <input
+                                <label className="text-sm font-medium text-gray-700">Assigned Student</label>
+                                <select
                                     value={studentId}
                                     onChange={(e) => setStudentId(e.target.value)}
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="e.g. 14"
-                                />
+                                >
+                                    <option value="">Select assigned student</option>
+                                    {assignedStudents.map((student) => (
+                                        <option key={student.profileId} value={student.profileId}>
+                                            {student.label}
+                                        </option>
+                                    ))}
+                                </select>
+                                {assignedStudents.length === 0 && (
+                                    <p className="mt-2 text-xs text-amber-600">No assigned interns found for attendance entry yet.</p>
+                                )}
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Date</label>
@@ -81,8 +115,7 @@ export default function SupervisorAttendanceTrackingPage() {
                                 <label className="text-sm font-medium text-gray-700">Status</label>
                                 <select
                                     value={status}
-                                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                    onChange={(e) => setStatus(e.target.value as any)}
+                                    onChange={(e) => setStatus(e.target.value as "PRESENT" | "ABSENT" | "LATE" | "EXCUSED")}
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                 >
                                     <option value="PRESENT">Present</option>
@@ -102,7 +135,7 @@ export default function SupervisorAttendanceTrackingPage() {
                             </div>
                             <button
                                 onClick={handleCreate}
-                                disabled={isSaving}
+                                disabled={isSaving || assignedStudents.length === 0}
                                 className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
                             >
                                 {isSaving ? "Saving..." : "Save Attendance"}

@@ -7,3 +7,6 @@ class DocumentSerializer(serializers.ModelSerializer):
         model = Document
         fields = ["id", "user", "file", "name", "uploaded_at"]
         read_only_fields = ["id", "uploaded_at"]
+        extra_kwargs = {
+            "user": {"required": False},
+        }

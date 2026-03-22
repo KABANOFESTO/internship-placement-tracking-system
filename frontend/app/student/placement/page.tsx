@@ -13,6 +13,11 @@ export default function StudentPlacementPage() {
         return placements.find((p) => p.confirmed) || null;
     }, [placements]);
 
+    const supervisorName =
+        confirmedPlacement?.supervisor_details?.user?.username ||
+        confirmedPlacement?.supervisor_details?.user?.email ||
+        null;
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="p-6 lg:p-8">
@@ -35,8 +40,10 @@ export default function StudentPlacementPage() {
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <h2 className="text-xl font-semibold text-gray-900">Placement #{confirmedPlacement.id}</h2>
-                                    <p className="mt-1 text-sm text-gray-500">Application ID: {confirmedPlacement.application}</p>
+                                    <h2 className="text-xl font-semibold text-gray-900">Confirmed Internship Placement</h2>
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        {confirmedPlacement.student_details?.program || "Internship placement details"}
+                                    </p>
                                 </div>
                                 <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs text-green-700">
                                     <CheckCircle2 className="mr-1 h-3 w-3" />
@@ -56,17 +63,21 @@ export default function StudentPlacementPage() {
                                         {format(new Date(confirmedPlacement.end_date), "MMM dd, yyyy")}
                                     </p>
                                 </div>
-                                {confirmedPlacement.supervisor && (
-                                    <div className="rounded-lg bg-gray-50 p-4">
-                                        <p className="text-xs text-gray-500">Supervisor</p>
-                                        <p className="mt-1 text-sm font-medium text-gray-900">
-                                            User #{confirmedPlacement.supervisor}
-                                        </p>
-                                    </div>
-                                )}
+                                <div className="rounded-lg bg-gray-50 p-4">
+                                    <p className="text-xs text-gray-500">Program</p>
+                                    <p className="mt-1 text-sm font-medium text-gray-900">
+                                        {confirmedPlacement.student_details?.program || "Not available"}
+                                    </p>
+                                </div>
                                 <div className="rounded-lg bg-gray-50 p-4">
                                     <p className="text-xs text-gray-500">Status</p>
                                     <p className="mt-1 text-sm font-medium text-gray-900">Confirmed</p>
+                                </div>
+                                <div className="rounded-lg bg-gray-50 p-4 sm:col-span-2">
+                                    <p className="text-xs text-gray-500">Supervisor</p>
+                                    <p className="mt-1 text-sm font-medium text-gray-900">
+                                        {supervisorName || "Pending assignment"}
+                                    </p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
