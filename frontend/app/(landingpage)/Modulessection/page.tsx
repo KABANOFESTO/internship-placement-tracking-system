@@ -230,7 +230,7 @@ const ModulesSection: React.FC = () => {
                             className="text-base mt-3 animate-fadeUp"
                             style={{ color: "#64748b", animationDelay: "0.2s" }}
                         >
-                            From application to evaluation — every module built for efficiency
+                            From application to evaluation every module built for efficiency
                         </p>
                     </div>
 

@@ -46,7 +46,7 @@ const services: Service[] = [
         ),
         title: "Supervisor Evaluations",
         description:
-            "Structured mid-term and final evaluation forms with skill rubrics, attendance tracking, and qualitative feedback — all accessible to students post-submission.",
+            "Structured mid-term and final evaluation forms with skill rubrics, attendance tracking, and qualitative feedback all accessible to students post-submission.",
         tag: "Mid-term & final",
     },
     {

@@ -284,25 +284,6 @@ export default function SupervisorSidebar() {
                     className="relative z-10 flex items-center gap-3 px-5 py-5"
                     style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
                 >
-                    <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{
-                            background: "linear-gradient(135deg,#4f46e5,#6366f1)",
-                            boxShadow: "0 0 16px rgba(99,102,241,0.5)",
-                        }}
-                    >
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-                            <rect x="9" y="3" width="6" height="4" rx="1" />
-                            <path d="M9 14l2 2 4-4" />
-                        </svg>
-                    </div>
-                    <div>
-                        <div className="sora text-xs font-bold tracking-widest uppercase leading-none" style={{ color: "#a5b4fc" }}>
-                            IPTS
-                        </div>
-                        <div className="sora text-sm font-bold text-white leading-tight">Supervisor Portal</div>
-                    </div>
                 </div>
 
                 {/* ── User profile card ── */}
@@ -378,29 +359,6 @@ export default function SupervisorSidebar() {
                             })}
                         </div>
                     ))}
-                </div>
-
-                {/* ── Quick tip card ── */}
-                <div className="relative z-10 sv-info-card">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: "linear-gradient(135deg,#4f46e5,#6366f1)" }}
-                        >
-                            <Briefcase size={13} color="white" />
-                        </div>
-                        <span className="sora text-xs font-bold text-white">Pending Evaluations</span>
-                    </div>
-                    <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
-                        Submit mid-term evaluations on time to keep interns on track.
-                    </p>
-                    <Link
-                        href="/supervisor/evaluation"
-                        className="block w-full text-center text-xs font-semibold py-2 rounded-lg text-white transition-opacity hover:opacity-85"
-                        style={{ background: "linear-gradient(135deg,#4f46e5,#6366f1)" }}
-                    >
-                        View Evaluations
-                    </Link>
                 </div>
 
                 {/* ── Logout ── */}
