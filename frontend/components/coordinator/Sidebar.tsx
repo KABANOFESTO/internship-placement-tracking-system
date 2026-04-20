@@ -47,7 +47,6 @@ const NAV_SECTIONS = [
         label: "Reports & Analytics",
         items: [
             { title: "Reports & Evaluations", url: "/coordinator/reports", icon: ClipboardCheck },
-            { title: "Analytics & Insights", url: "/coordinator/analytics", icon: BarChart3 },
         ],
     },
     {
@@ -60,7 +59,6 @@ const NAV_SECTIONS = [
     {
         label: "Help & Support",
         items: [
-            { title: "Help & Support", url: "/coordinator/help-support", icon: HelpCircle },
             { title: "System Settings", url: "/coordinator/system-settings", icon: Settings },
         ],
     },
@@ -388,29 +386,6 @@ export default function CoordinatorSidebar() {
                             })}
                         </div>
                     ))}
-                </div>
-
-                {/* ── Action card ── */}
-                <div className="relative z-10 co-action-card">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)" }}
-                        >
-                            <ListTodo size={13} color="white" />
-                        </div>
-                        <span className="sora text-xs font-bold text-white">Pending Applications</span>
-                    </div>
-                    <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
-                        Review and process new student applications to keep placements on schedule.
-                    </p>
-                    <Link
-                        href="/coordinator/applications"
-                        className="block w-full text-center text-xs font-semibold py-2 rounded-lg text-white transition-opacity hover:opacity-85"
-                        style={{ background: "linear-gradient(135deg,#0d9488,#14b8a6)" }}
-                    >
-                        Review Applications
-                    </Link>
                 </div>
 
                 {/* ── Logout ── */}
