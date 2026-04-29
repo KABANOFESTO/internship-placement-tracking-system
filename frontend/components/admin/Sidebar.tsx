@@ -393,29 +393,6 @@ export default function AdminSidebar() {
                     ))}
                 </div>
 
-                {/* ── System alert card ── */}
-                <div className="relative z-10 ad-action-card">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)" }}
-                        >
-                            <AlertTriangle size={13} color="white" />
-                        </div>
-                        <span className="sora text-xs font-bold text-white">System Overview</span>
-                    </div>
-                    <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.4)" }}>
-                        Review audit logs regularly to ensure data security and compliance.
-                    </p>
-                    <Link
-                        href="/admin/audit-logs"
-                        className="block w-full text-center text-xs font-semibold py-2 rounded-lg text-white transition-opacity hover:opacity-85"
-                        style={{ background: "linear-gradient(135deg,#d97706,#f59e0b)" }}
-                    >
-                        View Audit Logs
-                    </Link>
-                </div>
-
                 {/* ── Logout ── */}
                 <div
                     className="relative z-10 px-3 pb-5"

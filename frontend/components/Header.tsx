@@ -106,7 +106,7 @@ export default function Header() {
                         </div>
                         <div className="flex flex-col justify-center">
                             <span className="text-[0.68rem] font-medium uppercase tracking-[0.28em] text-slate-400/85">
-                                Internship Placement
+                                Online Internship Placement
                             </span>
                             <span className="text-[1.05rem] font-semibold leading-tight tracking-tight text-slate-50">
                                 Tracking Platform
