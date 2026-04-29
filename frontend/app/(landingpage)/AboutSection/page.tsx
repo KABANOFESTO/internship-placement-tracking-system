@@ -112,7 +112,7 @@ const AboutSection: React.FC = () => {
                             >
                                 <p className="text-base lg:text-lg leading-relaxed" style={{ color: "#475569" }}>
                                     The Online Internship Placement and Tracking System is built to transform
-                                    how healthcare and academic institutions manage student internships — from
+                                    how healthcare and academic institutions manage student internships from
                                     application and skill-based matching to real-time progress monitoring and
                                     final report submission.
                                 </p>
@@ -161,7 +161,7 @@ const AboutSection: React.FC = () => {
                             {/* Main image */}
                             <div className="image-wrapper shadow-2xl" style={{ boxShadow: "0 24px 64px rgba(37,99,235,0.15)" }}>
                                 <Image
-                                    src="/student.jpg"
+                                    src="/house.jpg"
                                     alt="Students engaged in internship activities"
                                     width={680}
                                     height={520}

@@ -282,7 +282,7 @@ const HeroSection: React.FC = () => {
                             style={{ color: "#94a3b8", maxWidth: "480px", animationDelay: "0.28s" }}
                         >
                             A centralised platform for skill-based internship placement, real-time
-                            progress tracking, supervisor evaluations, and report submissions — built
+                            progress tracking, supervisor evaluations, and report submissions built
                             for healthcare and academic institutions.
                         </p>
 

@@ -38,7 +38,7 @@ const WhyChooseSection: React.FC = () => {
         {
             number: "01",
             description:
-                "By centralising applications, placements, and evaluations in one platform, coordinators gain full visibility over every student's internship journey — from the first application to the final report submission — eliminating paperwork and manual follow-ups.",
+                "By centralising applications, placements, and evaluations in one platform, coordinators gain full visibility over every student's internship journey  from the first application to the final report submission eliminating paperwork and manual follow-ups.",
         },
         {
             number: "02",
@@ -48,7 +48,7 @@ const WhyChooseSection: React.FC = () => {
         {
             number: "03",
             description:
-                "The system brings skill-based matching, structured supervisor evaluations, real-time progress tracking, and document management into a single platform — giving institutions a clear, accountable, and transparent internship management process.",
+                "The system brings skill-based matching, structured supervisor evaluations, real-time progress tracking, and document management into a single platform  giving institutions a clear, accountable, and transparent internship management process.",
         },
     ];
 
