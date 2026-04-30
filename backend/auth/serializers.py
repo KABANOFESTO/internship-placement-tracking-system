@@ -44,6 +44,8 @@ class RegisterSerializer(serializers.ModelSerializer):
             "supervisor": User.Role.SUPERVISOR,
             "coordinator": User.Role.COORDINATOR,
             "student": User.Role.STUDENT,
+            "partner": User.Role.PARTNER,
+            "partner organization": User.Role.PARTNER,
         }
         if normalized not in role_map:
             raise serializers.ValidationError("Invalid role.")

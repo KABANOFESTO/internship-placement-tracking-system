@@ -26,23 +26,73 @@ class SupervisorProfileSerializer(serializers.ModelSerializer):
 
 
 class OrganizationSerializer(serializers.ModelSerializer):
+    partner_user_details = UserBasicSerializer(source="partner_user", read_only=True)
+
     class Meta:
         model = Organization
-        fields = ["id", "name", "address", "contact_email"]
+        fields = [
+            "id",
+            "partner_user",
+            "partner_user_details",
+            "name",
+            "address",
+            "contact_email",
+            "contact_phone",
+            "industry",
+            "website",
+            "description",
+            "capacity",
+            "status",
+            "settings",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
 
 
 class InternshipPositionSerializer(serializers.ModelSerializer):
+    organization_details = OrganizationSerializer(source="organization", read_only=True)
+
     class Meta:
         model = InternshipPosition
-        fields = ["id", "title", "organization", "description", "required_skills", "capacity"]
+        fields = [
+            "id",
+            "title",
+            "organization",
+            "organization_details",
+            "description",
+            "required_skills",
+            "capacity",
+            "requirements",
+            "location",
+            "start_date",
+            "end_date",
+            "is_active",
+            "created_at",
+        ]
+        read_only_fields = ["id", "created_at"]
+        extra_kwargs = {
+            "organization": {"required": False},
+        }
 
 
 class ApplicationSerializer(serializers.ModelSerializer):
     student_details = StudentProfileSerializer(source="student", read_only=True)
+    position_details = InternshipPositionSerializer(source="position", read_only=True)
 
     class Meta:
         model = Application
-        fields = ["id", "student", "student_details", "position", "cover_letter", "cv", "status", "created_at"]
+        fields = [
+            "id",
+            "student",
+            "student_details",
+            "position",
+            "position_details",
+            "cover_letter",
+            "cv",
+            "status",
+            "created_at",
+        ]
         read_only_fields = ["id", "created_at"]
         extra_kwargs = {
             "student": {"required": False},
@@ -52,10 +102,21 @@ class ApplicationSerializer(serializers.ModelSerializer):
 class PlacementSerializer(serializers.ModelSerializer):
     student_details = serializers.SerializerMethodField()
     supervisor_details = SupervisorProfileSerializer(source="supervisor", read_only=True)
+    application_details = ApplicationSerializer(source="application", read_only=True)
 
     class Meta:
         model = Placement
-        fields = ["id", "application", "student_details", "supervisor", "supervisor_details", "start_date", "end_date", "confirmed"]
+        fields = [
+            "id",
+            "application",
+            "application_details",
+            "student_details",
+            "supervisor",
+            "supervisor_details",
+            "start_date",
+            "end_date",
+            "confirmed",
+        ]
 
     def get_student_details(self, obj):
         student = getattr(obj.application, "student", None)

@@ -16,6 +16,15 @@ class ReportViewSet(viewsets.ModelViewSet):
         queryset = Report.objects.select_related("student", "student__user").order_by("-submitted_at")
         if self.request.user.is_staff or self.request.user.role in ["Admin", "Coordinator"]:
             return queryset
+        if self.request.user.role == "Partner":
+            from internships.models import Placement
+            org = getattr(self.request.user, "partner_organization", None)
+            if not org:
+                return queryset.none()
+            student_ids = Placement.objects.filter(
+                application__position__organization=org
+            ).values_list("application__student_id", flat=True)
+            return queryset.filter(student_id__in=student_ids)
         if self.request.user.role == "Supervisor":
             return queryset
         if hasattr(self.request.user, "studentprofile"):
@@ -36,7 +45,7 @@ class ReportViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def set_feedback(self, request, pk=None):
         report = self.get_object()
-        if request.user.role not in ["Supervisor", "Admin", "Coordinator"] and not request.user.is_staff:
+        if request.user.role not in ["Supervisor", "Admin", "Coordinator", "Partner"] and not request.user.is_staff:
             return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
         feedback = request.data.get("feedback", "")
         report.feedback = feedback

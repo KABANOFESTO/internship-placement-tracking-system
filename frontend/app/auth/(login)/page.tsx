@@ -19,6 +19,7 @@ export default function LoginPage() {
             case "Student": return "🎓";
             case "Coordinator": return "🗂️";
             case "Supervisor": return "📋";
+            case "Partner": return "🏢";
             default: return "👋";
         }
     };
@@ -29,6 +30,7 @@ export default function LoginPage() {
             case "Student": return "Welcome back — Student Portal";
             case "Coordinator": return "Welcome back — Coordinator Dashboard";
             case "Supervisor": return "Welcome back — Supervisor Dashboard";
+            case "Partner": return "Welcome back - Partner Organization Portal";
             default: return "Welcome to the Internship Platform";
         }
     };
@@ -39,6 +41,7 @@ export default function LoginPage() {
             case "Student": return "/student";
             case "Coordinator": return "/coordinator";
             case "Supervisor": return "/supervisor";
+            case "Partner": return "/partner";
             default: return "/";
         }
     };

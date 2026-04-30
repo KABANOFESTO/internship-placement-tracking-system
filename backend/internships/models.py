@@ -1,12 +1,34 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 class Organization(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "ACTIVE", "Active"
+        PENDING = "PENDING", "Pending"
+        SUSPENDED = "SUSPENDED", "Suspended"
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    partner_user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="partner_organization",
+    )
     name = models.CharField(max_length=255)
     address = models.TextField()
     contact_email = models.EmailField()
+    contact_phone = models.CharField(max_length=30, blank=True)
+    industry = models.CharField(max_length=120, blank=True)
+    website = models.URLField(blank=True)
+    description = models.TextField(blank=True)
+    capacity = models.PositiveIntegerField(default=0)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.ACTIVE)
+    settings = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.name
@@ -18,6 +40,12 @@ class InternshipPosition(models.Model):
     description = models.TextField()
     required_skills = models.TextField()
     capacity = models.IntegerField()
+    requirements = models.TextField(blank=True)
+    location = models.CharField(max_length=255, blank=True)
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.title

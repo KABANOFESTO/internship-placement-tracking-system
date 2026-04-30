@@ -5,6 +5,7 @@ from .views import (
     InternshipPositionViewSet,
     ApplicationViewSet,
     PlacementViewSet,
+    PartnerPortalViewSet,
 )
 
 
@@ -13,6 +14,7 @@ router.register(r"organizations", OrganizationViewSet, basename="organization")
 router.register(r"positions", InternshipPositionViewSet, basename="position")
 router.register(r"applications", ApplicationViewSet, basename="application")
 router.register(r"placements", PlacementViewSet, basename="placement")
+router.register(r"partner", PartnerPortalViewSet, basename="partner")
 
 urlpatterns = [
     path("", include(router.urls)),
