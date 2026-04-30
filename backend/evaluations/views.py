@@ -20,6 +20,15 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         queryset = Evaluation.objects.select_related("student", "supervisor").order_by("-created_at")
         if self.request.user.is_staff or self.request.user.role in ["Admin", "Coordinator"]:
             return queryset
+        if self.request.user.role == "Partner":
+            from internships.models import Placement
+            org = getattr(self.request.user, "partner_organization", None)
+            if not org:
+                return queryset.none()
+            student_ids = Placement.objects.filter(
+                application__position__organization=org
+            ).values_list("application__student_id", flat=True)
+            return queryset.filter(student_id__in=student_ids)
         if self.request.user.role == "Supervisor":
             return queryset.filter(supervisor=self.request.user.supervisorprofile)
         if hasattr(self.request.user, "studentprofile"):
@@ -27,8 +36,14 @@ class EvaluationViewSet(viewsets.ModelViewSet):
         return queryset.none()
 
     def perform_create(self, serializer):
-        if self.request.user.role not in ["Supervisor", "Admin", "Coordinator"] and not self.request.user.is_staff:
-            raise ValidationError("Only supervisors or admins can create evaluations.")
+        if self.request.user.role not in ["Supervisor", "Admin", "Coordinator", "Partner"] and not self.request.user.is_staff:
+            raise ValidationError("Only supervisors, partners, or admins can create evaluations.")
+        if self.request.user.role == "Partner":
+            from internships.models import Placement
+            org = getattr(self.request.user, "partner_organization", None)
+            student = serializer.validated_data.get("student")
+            if not org or not Placement.objects.filter(application__position__organization=org, application__student=student).exists():
+                raise ValidationError("You can only evaluate students assigned to your organization.")
         if self.request.user.role == "Supervisor" and hasattr(self.request.user, "supervisorprofile"):
             serializer.save(supervisor=self.request.user.supervisorprofile)
             return
@@ -36,11 +51,12 @@ class EvaluationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"])
     def statistics(self, request):
-        if request.user.role not in ["Admin", "Coordinator"] and not request.user.is_staff:
+        if request.user.role not in ["Admin", "Coordinator", "Partner"] and not request.user.is_staff:
             return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
-        total = Evaluation.objects.count()
-        by_type = Evaluation.objects.values("evaluation_type").annotate(count=models.Count("id"))
-        avg_score = Evaluation.objects.aggregate(avg=models.Avg("score"))
+        queryset = self.get_queryset()
+        total = queryset.count()
+        by_type = queryset.values("evaluation_type").annotate(count=models.Count("id"))
+        avg_score = queryset.aggregate(avg=models.Avg("score"))
         return Response({"total": total, "by_type": list(by_type), "avg_score": avg_score.get("avg")})
 
 
@@ -73,6 +89,15 @@ class EvaluationRatingViewSet(viewsets.ModelViewSet):
         queryset = EvaluationRating.objects.select_related("evaluation", "criterion").all()
         if self.request.user.is_staff or self.request.user.role in ["Admin", "Coordinator"]:
             return queryset
+        if self.request.user.role == "Partner":
+            from internships.models import Placement
+            org = getattr(self.request.user, "partner_organization", None)
+            if not org:
+                return queryset.none()
+            student_ids = Placement.objects.filter(
+                application__position__organization=org
+            ).values_list("application__student_id", flat=True)
+            return queryset.filter(evaluation__student_id__in=student_ids)
         if self.request.user.role == "Supervisor":
             return queryset.filter(evaluation__supervisor=self.request.user.supervisorprofile)
         if hasattr(self.request.user, "studentprofile"):
@@ -80,8 +105,8 @@ class EvaluationRatingViewSet(viewsets.ModelViewSet):
         return queryset.none()
 
     def perform_create(self, serializer):
-        if self.request.user.role not in ["Supervisor", "Admin", "Coordinator"] and not self.request.user.is_staff:
-            raise ValidationError("Only supervisors or admins can create ratings.")
+        if self.request.user.role not in ["Supervisor", "Admin", "Coordinator", "Partner"] and not self.request.user.is_staff:
+            raise ValidationError("Only supervisors, partners, or admins can create ratings.")
         serializer.save()
 
 # Create your views here.

@@ -2,18 +2,35 @@ import { apiSlice } from "./ApiSlice";
 
 export interface Organization {
     id: string;
+    partner_user?: number | null;
     name: string;
     address: string;
     contact_email: string;
+    contact_phone?: string;
+    industry?: string;
+    website?: string;
+    description?: string;
+    capacity?: number;
+    status?: string;
+    settings?: Record<string, unknown>;
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface InternshipPosition {
     id: string;
     title: string;
     organization: string;
+    organization_details?: Organization;
     description: string;
     required_skills: string;
     capacity: number;
+    requirements?: string;
+    location?: string;
+    start_date?: string | null;
+    end_date?: string | null;
+    is_active?: boolean;
+    created_at?: string;
     match_score?: number;
     matched_skills?: string[];
 }
@@ -42,6 +59,7 @@ export interface SupervisorDetails {
     id: number;
     organization: string;
     position: string;
+    position_details?: InternshipPosition;
     user?: UserSummary;
 }
 
@@ -59,6 +77,7 @@ export interface Application {
 export interface Placement {
     id: string;
     application: string;
+    application_details?: Application;
     student_details?: StudentDetails;
     supervisor: number | null;
     supervisor_details?: SupervisorDetails | null;
@@ -78,11 +97,40 @@ export interface PlacementStatistics {
     by_supervisor: Array<{ supervisor: number | null; count: number }>;
 }
 
+export interface PartnerDashboard {
+    organization: Organization | null;
+    metrics: {
+        positions: number;
+        active_positions: number;
+        applications: number;
+        pending_applications: number;
+        assigned_students: number;
+        supervisors: number;
+        reports_pending_feedback: number;
+        average_evaluation_score: number | null;
+        attendance_present: number;
+        attendance_absent: number;
+    };
+    application_status: Array<{ status: ApplicationStatus; count: number }>;
+    placement_statistics: { confirmed: number; unconfirmed: number };
+    supervisors: SupervisorDetails[];
+    recent_applications: Application[];
+    assigned_students: Placement[];
+}
+
 export const internshipsSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getOrganizations: builder.query<Organization[], void>({
             query: () => ({ url: "organizations/", method: "GET" }),
             providesTags: ["Organization"],
+        }),
+        getMyOrganization: builder.query<Organization, void>({
+            query: () => ({ url: "organizations/me/", method: "GET" }),
+            providesTags: ["Organization"],
+        }),
+        updateMyOrganization: builder.mutation<Organization, Partial<Organization>>({
+            query: (data) => ({ url: "organizations/me/", method: "PATCH", body: data }),
+            invalidatesTags: ["Organization", "Analytics"],
         }),
         createOrganization: builder.mutation<Organization, Partial<Organization>>({
             query: (data) => ({ url: "organizations/", method: "POST", body: data }),
@@ -105,7 +153,7 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             invalidatesTags: ["Position"],
         }),
         updatePosition: builder.mutation<InternshipPosition, { id: string; data: Partial<InternshipPosition> }>({
-            query: ({ id, data }) => ({ url: `positions/${id}/`, method: "PUT", body: data }),
+            query: ({ id, data }) => ({ url: `positions/${id}/`, method: "PATCH", body: data }),
             invalidatesTags: ["Position"],
         }),
         deletePosition: builder.mutation<void, string>({
@@ -131,6 +179,14 @@ export const internshipsSlice = apiSlice.injectEndpoints({
         updateApplication: builder.mutation<Application, { id: string; data: Partial<Application> }>({
             query: ({ id, data }) => ({ url: `applications/${id}/`, method: "PATCH", body: data }),
             invalidatesTags: ["Application"],
+        }),
+        acceptApplication: builder.mutation<Application, string>({
+            query: (id) => ({ url: `applications/${id}/accept/`, method: "POST" }),
+            invalidatesTags: ["Application", "Placement", "Analytics"],
+        }),
+        rejectApplication: builder.mutation<Application, string>({
+            query: (id) => ({ url: `applications/${id}/reject/`, method: "POST" }),
+            invalidatesTags: ["Application", "Analytics"],
         }),
         bulkUpdateApplicationStatus: builder.mutation<{ updated: number }, { ids: string[]; status: ApplicationStatus }>({
             query: (data) => ({
@@ -168,12 +224,29 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             query: () => ({ url: "placements/statistics/", method: "GET" }),
             providesTags: ["Analytics"],
         }),
+        assignPlacementSupervisor: builder.mutation<
+            Placement,
+            { application: string; supervisor: number; start_date: string; end_date: string }
+        >({
+            query: (data) => ({ url: "placements/assign_supervisor/", method: "POST", body: data }),
+            invalidatesTags: ["Placement", "Application", "Analytics"],
+        }),
+        getPartnerDashboard: builder.query<PartnerDashboard, void>({
+            query: () => ({ url: "partner/dashboard/", method: "GET" }),
+            providesTags: ["Analytics", "Organization", "Application", "Placement", "Position"],
+        }),
+        getPartnerSupervisors: builder.query<SupervisorDetails[], void>({
+            query: () => ({ url: "partner/supervisors/", method: "GET" }),
+            providesTags: ["Auth"],
+        }),
     }),
 });
 
 export const {
     useGetOrganizationsQuery,
     useCreateOrganizationMutation,
+    useGetMyOrganizationQuery,
+    useUpdateMyOrganizationMutation,
     useUpdateOrganizationMutation,
     useDeleteOrganizationMutation,
     useGetPositionsQuery,
@@ -184,6 +257,8 @@ export const {
     useGetApplicationsQuery,
     useCreateApplicationMutation,
     useUpdateApplicationMutation,
+    useAcceptApplicationMutation,
+    useRejectApplicationMutation,
     useDeleteApplicationMutation,
     useBulkUpdateApplicationStatusMutation,
     useGetApplicationStatisticsQuery,
@@ -192,4 +267,7 @@ export const {
     useUpdatePlacementMutation,
     useDeletePlacementMutation,
     useGetPlacementStatisticsQuery,
+    useAssignPlacementSupervisorMutation,
+    useGetPartnerDashboardQuery,
+    useGetPartnerSupervisorsQuery,
 } = internshipsSlice;
