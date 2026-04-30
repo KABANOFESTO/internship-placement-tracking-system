@@ -11,7 +11,7 @@ import {
 } from "@/lib/redux/slices/AuthSlice";
 import { toast } from "sonner";
 
-const roles = ["All Roles", "Admin", "Coordinator", "Supervisor", "Student"];
+const roles = ["All Roles", "Admin", "Coordinator", "Supervisor", "Student", "Partner"];
 
 interface User {
     id: number;
@@ -406,6 +406,7 @@ export default function UserManagementDashboard() {
                                     <option value="Supervisor">Supervisor</option>
                                     <option value="Coordinator">Coordinator</option>
                                     <option value="Admin">Admin</option>
+                                    <option value="Partner">Partner Organization</option>
                                 </select>
                             </div>
 
@@ -485,6 +486,7 @@ export default function UserManagementDashboard() {
                                     <option value="Supervisor">Supervisor</option>
                                     <option value="Coordinator">Coordinator</option>
                                     <option value="Admin">Admin</option>
+                                    <option value="Partner">Partner Organization</option>
                                 </select>
                             </div>
                         </div>

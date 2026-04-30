@@ -11,12 +11,14 @@ import {
     useUpdatePositionMutation,
     useDeletePositionMutation,
 } from "@/lib/redux/slices/InternshipsSlice";
+import { useCreateUserMutation } from "@/lib/redux/slices/AuthSlice";
 import { toast } from "sonner";
 
 export default function AdminInstitutionsPartnersPage() {
     const { data: organizations, isLoading } = useGetOrganizationsQuery();
     const { data: positions } = useGetPositionsQuery();
     const [createOrganization, { isLoading: isSavingOrg }] = useCreateOrganizationMutation();
+    const [createPartnerUser, { isLoading: isCreatingPartnerUser }] = useCreateUserMutation();
     const [updateOrganization, { isLoading: isUpdatingOrg }] = useUpdateOrganizationMutation();
     const [deleteOrganization] = useDeleteOrganizationMutation();
     const [createPosition, { isLoading: isSavingPos }] = useCreatePositionMutation();
@@ -52,13 +54,29 @@ export default function AdminInstitutionsPartnersPage() {
             return;
         }
         try {
-            await createOrganization({ name, address, contact_email: contactEmail }).unwrap();
-            toast.success("Organization added.");
+            const partnerUser = await createPartnerUser({
+                username: name,
+                email: contactEmail,
+                role: "Partner",
+                status: "Active",
+            }).unwrap();
+
+            await createOrganization({
+                name,
+                address,
+                contact_email: contactEmail,
+                partner_user: partnerUser?.user_id,
+            }).unwrap();
+            if (partnerUser?.email_sent === false) {
+                toast.warning("Partner organization added, but credential email failed. Check email settings.");
+            } else {
+                toast.success("Partner organization added. Login credentials sent by email.");
+            }
             setName("");
             setAddress("");
             setContactEmail("");
         } catch {
-            toast.error("Failed to add organization.");
+            toast.error("Failed to add partner organization or send credentials.");
         }
     };
 
@@ -185,12 +203,15 @@ export default function AdminInstitutionsPartnersPage() {
                                     className="w-full rounded-lg border border-gray-300 px-3 py-2"
                                     placeholder="Contact email"
                                 />
+                                <p className="rounded-lg bg-blue-50 px-3 py-2 text-xs text-blue-800">
+                                    A Partner Organization login account will be created and credentials will be emailed to this address.
+                                </p>
                                 <button
                                     onClick={handleCreate}
-                                    disabled={isSavingOrg}
+                                    disabled={isSavingOrg || isCreatingPartnerUser}
                                     className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
                                 >
-                                    {isSavingOrg ? "Saving..." : "Add Institution"}
+                                    {isSavingOrg || isCreatingPartnerUser ? "Saving..." : "Add Partner Institution"}
                                 </button>
                             </div>
                         </div>

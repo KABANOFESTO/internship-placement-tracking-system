@@ -109,6 +109,8 @@ class AdminUserCreateView(generics.CreateAPIView):
                     "message": "User created successfully but failed to send email.",
                     "user_id": user.id,
                     "email": user.email,
+                    "role": user.role,
+                    "email_sent": False,
                 },
                 status=status.HTTP_201_CREATED,
                 headers=headers,
@@ -116,7 +118,13 @@ class AdminUserCreateView(generics.CreateAPIView):
 
         headers = self.get_success_headers(serializer.data)
         return Response(
-            {"message": "User created successfully. Email with credentials sent."},
+            {
+                "message": "User created successfully. Email with credentials sent.",
+                "user_id": user.id,
+                "email": user.email,
+                "role": user.role,
+                "email_sent": True,
+            },
             status=status.HTTP_201_CREATED,
             headers=headers,
         )
