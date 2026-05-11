@@ -114,7 +114,7 @@ function ConfirmDialog({
 export default function SupervisorSidebar() {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const pathname = usePathname();
+    const pathname = usePathname() || "/supervisor";
     const { data: session } = useSession();
 
     const user = session?.user;

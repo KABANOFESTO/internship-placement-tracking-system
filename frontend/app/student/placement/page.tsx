@@ -17,6 +17,8 @@ export default function StudentPlacementPage() {
         confirmedPlacement?.supervisor_details?.user?.username ||
         confirmedPlacement?.supervisor_details?.user?.email ||
         null;
+    const position = confirmedPlacement?.application_details?.position_details;
+    const organization = position?.organization_details;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -42,7 +44,9 @@ export default function StudentPlacementPage() {
                                 <div>
                                     <h2 className="text-xl font-semibold text-gray-900">Confirmed Internship Placement</h2>
                                     <p className="mt-1 text-sm text-gray-500">
-                                        {confirmedPlacement.student_details?.program || "Internship placement details"}
+                                        {organization?.name && position?.title
+                                            ? `${position.title} at ${organization.name}`
+                                            : confirmedPlacement.student_details?.program || "Internship placement details"}
                                     </p>
                                 </div>
                                 <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs text-green-700">
@@ -51,6 +55,18 @@ export default function StudentPlacementPage() {
                                 </span>
                             </div>
                             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="rounded-lg bg-blue-50 p-4 sm:col-span-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Company / Host Organization</p>
+                                    <p className="mt-1 text-lg font-bold text-gray-900">{organization?.name || "Not available"}</p>
+                                    <p className="mt-1 text-sm text-gray-600">{organization?.address || "Address not available"}</p>
+                                    <p className="mt-1 text-xs text-gray-500">{organization?.contact_email || "Contact email not available"}</p>
+                                </div>
+                                <div className="rounded-lg bg-gray-50 p-4 sm:col-span-2">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Internship Position</p>
+                                    <p className="mt-1 text-base font-semibold text-gray-900">{position?.title || "Not available"}</p>
+                                    <p className="mt-1 text-sm text-gray-600">{position?.description || "No position description available."}</p>
+                                    <p className="mt-1 text-xs text-gray-500">{position?.required_skills ? `Required skills: ${position.required_skills}` : "Required skills not listed"}</p>
+                                </div>
                                 <div className="rounded-lg bg-gray-50 p-4">
                                     <p className="text-xs text-gray-500">Start Date</p>
                                     <p className="mt-1 text-sm font-medium text-gray-900">

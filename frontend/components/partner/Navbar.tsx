@@ -19,7 +19,7 @@ const titles: Record<string, string> = {
 };
 
 export default function PartnerNavbar() {
-    const pathname = usePathname();
+    const pathname = usePathname() || "/partner";
 
     return (
         <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur">

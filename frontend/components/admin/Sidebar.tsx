@@ -7,7 +7,6 @@ import {
     X,
     LayoutDashboard,
     Users,
-    Building2,
     ClipboardList,
     FileSearch,
     MapPinned,
@@ -27,7 +26,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useGetAllUsersQuery } from "@/lib/redux/slices/AuthSlice";
-import { useGetPlacementsQuery, useGetOrganizationsQuery } from "@/lib/redux/slices/InternshipsSlice";
+import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 
 // ── Nav config ──────────────────────────────────────────────────────────────
 const NAV_SECTIONS = [
@@ -41,7 +40,6 @@ const NAV_SECTIONS = [
         label: "Management",
         items: [
             { title: "User Management", url: "/admin/user-management", icon: Users },
-            { title: "Institutions & Partners", url: "/admin/institutions-partners", icon: Building2 },
             { title: "Internship Management", url: "/admin/internship-management", icon: Layers },
             { title: "Applications Overview", url: "/admin/applications-overview", icon: FileSearch },
             { title: "Placements Overview", url: "/admin/placements-overview", icon: MapPinned },
@@ -128,11 +126,10 @@ function ConfirmDialog({
 export default function AdminSidebar() {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const pathname = usePathname();
+    const pathname = usePathname() || "/admin";
     const { data: session } = useSession();
     const { data: users } = useGetAllUsersQuery({});
     const { data: placements } = useGetPlacementsQuery();
-    const { data: organizations } = useGetOrganizationsQuery();
 
     const user = session?.user;
     const initials = user
@@ -311,7 +308,7 @@ export default function AdminSidebar() {
                             background: "transparent",
                         }}
                     >
-                    </div>
+                    </div> 
                     <div>
                         <div className="sora text-sm font-bold text-white leading-tight">
                             Admin Portal
@@ -345,7 +342,7 @@ export default function AdminSidebar() {
                     {[
                         { label: "Users", value: String(users?.length ?? 0), icon: Users },
                         { label: "Active", value: String(placements?.length ?? 0), icon: ClipboardList },
-                        { label: "Partners", value: String(organizations?.length ?? 0), icon: Building2 },
+                        { label: "System", value: "OK", icon: Shield },
                     ].map(({ label, value, icon: Icon }) => (
                         <div key={label} className="ad-stat-chip">
                             <Icon size={12} style={{ color: "#fde68a" }} />

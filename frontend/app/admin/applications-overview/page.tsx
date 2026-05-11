@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Download } from "lucide-react";
-import { useGetApplicationsQuery, useGetPositionsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
+import { ApplicationStatus, useGetApplicationsQuery, useGetPositionsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -14,7 +14,7 @@ export default function AdminApplicationsOverviewPage() {
     const [updateApplication] = useUpdateApplicationMutation();
     const [bulkUpdate] = useBulkUpdateApplicationStatusMutation();
 
-    const [statusMap, setStatusMap] = useState<Record<string, string>>({});
+    const [statusMap, setStatusMap] = useState<Record<string, ApplicationStatus | "">>({});
     const [selected, setSelected] = useState<Record<string, boolean>>({});
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
@@ -206,7 +206,7 @@ export default function AdminApplicationsOverviewPage() {
                                         <div className="flex items-center gap-2">
                                             <select
                                                 value={statusMap[app.id] || ""}
-                                                onChange={(e) => setStatusMap((prev) => ({ ...prev, [app.id]: e.target.value }))}
+                                                onChange={(e) => setStatusMap((prev) => ({ ...prev, [app.id]: e.target.value as ApplicationStatus | "" }))}
                                                 className="rounded-md border border-gray-300 px-2 py-1 text-xs"
                                             >
                                                 <option value="">Set status</option>
