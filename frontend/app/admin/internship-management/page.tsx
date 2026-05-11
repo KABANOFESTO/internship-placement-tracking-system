@@ -1,67 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { BriefcaseBusiness, Building2, Edit, Trash2, Users } from "lucide-react";
 import {
-    useGetPositionsQuery,
-    useCreatePositionMutation,
-    useUpdatePositionMutation,
+    InternshipPosition,
     useDeletePositionMutation,
-    useGetOrganizationsQuery,
+    useGetPlacementsQuery,
+    useGetPositionsQuery,
+    useUpdatePositionMutation,
 } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 
+const PAGE_SIZE = 8;
+
 export default function AdminInternshipManagementPage() {
-    const { data: positions, isLoading } = useGetPositionsQuery();
-    const { data: organizations } = useGetOrganizationsQuery();
-    const [createPosition, { isLoading: isSaving }] = useCreatePositionMutation();
+    const { data: positions = [], isLoading } = useGetPositionsQuery();
+    const { data: placements = [] } = useGetPlacementsQuery();
     const [updatePosition, { isLoading: isUpdating }] = useUpdatePositionMutation();
     const [deletePosition] = useDeletePositionMutation();
 
-    const [title, setTitle] = useState("");
-    const [organization, setOrganization] = useState("");
-    const [description, setDescription] = useState("");
-    const [skills, setSkills] = useState("");
-    const [capacity, setCapacity] = useState("");
-
     const [editId, setEditId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState("");
-    const [editOrganization, setEditOrganization] = useState("");
     const [editDescription, setEditDescription] = useState("");
     const [editSkills, setEditSkills] = useState("");
     const [editCapacity, setEditCapacity] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const [statusFilter, setStatusFilter] = useState<"ALL" | "OPEN" | "FULL" | "CLOSED">("ALL");
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const handleCreate = async () => {
-        if (!title || !organization || !description || !capacity) {
-            toast.error("Title, organization, description, and capacity are required.");
-            return;
-        }
-        try {
-            await createPosition({
-                title,
-                organization,
-                description,
-                required_skills: skills,
-                capacity: Number(capacity),
-            }).unwrap();
-            toast.success("Internship position created.");
-            setTitle("");
-            setOrganization("");
-            setDescription("");
-            setSkills("");
-            setCapacity("");
-        } catch {
-            toast.error("Failed to create position.");
-        }
-    };
+    const occupiedByPosition = useMemo(() => {
+        const counts: Record<string, number> = {};
+        placements.forEach((placement) => {
+            const positionId = placement.application_details?.position;
+            if (positionId && placement.confirmed) {
+                counts[positionId] = (counts[positionId] || 0) + 1;
+            }
+        });
+        return counts;
+    }, [placements]);
 
-    const startEdit = (pos: any) => {
-        setEditId(pos.id);
-        setEditTitle(pos.title || "");
-        setEditOrganization(pos.organization || "");
-        setEditDescription(pos.description || "");
-        setEditSkills(pos.required_skills || "");
-        setEditCapacity(String(pos.capacity ?? ""));
+    const enrichedPositions = useMemo(() => {
+        return positions.map((position) => {
+            const occupied = occupiedByPosition[position.id] || 0;
+            const available = Math.max((position.capacity || 0) - occupied, 0);
+            const isFull = occupied >= (position.capacity || 0) && (position.capacity || 0) > 0;
+            const isClosed = position.is_active === false;
+            return { ...position, occupied, available, isFull, isClosed };
+        });
+    }, [positions, occupiedByPosition]);
+
+    const filteredPositions = useMemo(() => {
+        const query = searchTerm.trim().toLowerCase();
+        return enrichedPositions.filter((position) => {
+            const organizationName = position.organization_details?.name || "";
+            const matchesSearch = query
+                ? position.title.toLowerCase().includes(query) ||
+                  organizationName.toLowerCase().includes(query) ||
+                  (position.required_skills || "").toLowerCase().includes(query)
+                : true;
+
+            const matchesStatus =
+                statusFilter === "ALL" ||
+                (statusFilter === "OPEN" && !position.isClosed && !position.isFull) ||
+                (statusFilter === "FULL" && position.isFull) ||
+                (statusFilter === "CLOSED" && position.isClosed);
+
+            return matchesSearch && matchesStatus;
+        });
+    }, [enrichedPositions, searchTerm, statusFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredPositions.length / PAGE_SIZE));
+    const paginatedPositions = filteredPositions.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+    const totalCapacity = enrichedPositions.reduce((sum, position) => sum + (position.capacity || 0), 0);
+    const totalOccupied = enrichedPositions.reduce((sum, position) => sum + position.occupied, 0);
+    const totalAvailable = Math.max(totalCapacity - totalOccupied, 0);
+    const openPositions = enrichedPositions.filter((position) => !position.isClosed && !position.isFull).length;
+
+    const startEdit = (position: InternshipPosition) => {
+        setEditId(position.id);
+        setEditTitle(position.title || "");
+        setEditDescription(position.description || "");
+        setEditSkills(position.required_skills || "");
+        setEditCapacity(String(position.capacity ?? ""));
     };
 
     const handleUpdate = async () => {
@@ -71,7 +91,6 @@ export default function AdminInternshipManagementPage() {
                 id: editId,
                 data: {
                     title: editTitle,
-                    organization: editOrganization,
                     description: editDescription,
                     required_skills: editSkills,
                     capacity: Number(editCapacity),
@@ -84,7 +103,17 @@ export default function AdminInternshipManagementPage() {
         }
     };
 
+    const handleToggleStatus = async (position: InternshipPosition) => {
+        try {
+            await updatePosition({ id: position.id, data: { is_active: !position.is_active } }).unwrap();
+            toast.success(position.is_active === false ? "Position reopened." : "Position closed.");
+        } catch {
+            toast.error("Failed to update position status.");
+        }
+    };
+
     const handleDelete = async (id: string) => {
+        if (!window.confirm("Delete this internship position? This action cannot be undone.")) return;
         try {
             await deletePosition(id).unwrap();
             toast.success("Position deleted.");
@@ -93,180 +122,235 @@ export default function AdminInternshipManagementPage() {
         }
     };
 
+    const statusBadge = (position: { isClosed: boolean; isFull: boolean }) => {
+        if (position.isClosed) return "bg-slate-100 text-slate-700 border-slate-200";
+        if (position.isFull) return "bg-amber-50 text-amber-700 border-amber-200";
+        return "bg-emerald-50 text-emerald-700 border-emerald-200";
+    };
+
+    const statusLabel = (position: { isClosed: boolean; isFull: boolean }) => {
+        if (position.isClosed) return "Closed";
+        if (position.isFull) return "Full";
+        return "Open";
+    };
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="min-h-screen bg-slate-50">
             <div className="p-6 lg:p-8">
-                <div className="mb-6">
-                    <h1 className="text-3xl font-bold text-gray-900">Internship Management</h1>
-                    <p className="mt-1 text-sm text-gray-500">Create and manage internship positions</p>
+                <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                    <div>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Admin Operations</p>
+                        <h1 className="mt-1 text-3xl font-bold text-slate-900">Internship Management</h1>
+                        <p className="mt-1 text-sm text-slate-500">Monitor partner positions, placement capacity, and availability.</p>
+                    </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-                    <div className="lg:col-span-1">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-gray-900">Create Position</h2>
-                            <div className="mt-4 space-y-4">
-                                <input
-                                    value={title}
-                                    onChange={(e) => setTitle(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="Position title"
-                                />
-                                <select
-                                    value={organization}
-                                    onChange={(e) => setOrganization(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                >
-                                    <option value="">Select organization</option>
-                                    {organizations?.map((org) => (
-                                        <option key={org.id} value={org.id}>
-                                            {org.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <textarea
-                                    value={description}
-                                    onChange={(e) => setDescription(e.target.value)}
-                                    rows={3}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="Position description"
-                                />
-                                <input
-                                    value={skills}
-                                    onChange={(e) => setSkills(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="Required skills (comma separated)"
-                                />
-                                <input
-                                    value={capacity}
-                                    onChange={(e) => setCapacity(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                    placeholder="Capacity"
-                                />
-                                <button
-                                    onClick={handleCreate}
-                                    disabled={isSaving}
-                                    className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
-                                >
-                                    {isSaving ? "Saving..." : "Create Position"}
-                                </button>
+                <div className="mb-6 grid gap-4 md:grid-cols-4">
+                    {[
+                        { label: "Positions", value: positions.length, icon: BriefcaseBusiness },
+                        { label: "Open Positions", value: openPositions, icon: Building2 },
+                        { label: "Occupied Capacity", value: totalOccupied, icon: Users },
+                        { label: "Available Capacity", value: totalAvailable, icon: BriefcaseBusiness },
+                    ].map(({ label, value, icon: Icon }) => (
+                        <div key={label} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                            <div className="flex items-center justify-between">
+                                <p className="text-sm text-slate-500">{label}</p>
+                                <Icon className="h-5 w-5 text-slate-400" />
                             </div>
+                            <p className="mt-3 text-3xl font-bold text-slate-900">{value}</p>
                         </div>
-                    </div>
+                    ))}
+                </div>
 
-                    <div className="lg:col-span-2 space-y-6">
-                        <div className="rounded-2xl bg-white p-6 shadow-sm">
-                            <h2 className="text-lg font-semibold text-gray-900">Positions</h2>
-                            <div className="mt-3">
+                <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div className="border-b border-slate-200 p-5">
+                        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900">Internship Positions</h2>
+                                <p className="text-sm text-slate-500">Created by partner organizations and managed by coordinators/admins.</p>
+                            </div>
+                            <div className="flex flex-col gap-3 sm:flex-row">
                                 <input
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm"
-                                    placeholder="Search positions"
+                                    onChange={(event) => {
+                                        setSearchTerm(event.target.value);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500 sm:w-72"
+                                    placeholder="Search by title, company, or skills"
                                 />
+                                <select
+                                    value={statusFilter}
+                                    onChange={(event) => {
+                                        setStatusFilter(event.target.value as typeof statusFilter);
+                                        setCurrentPage(1);
+                                    }}
+                                    className="rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-slate-500"
+                                >
+                                    <option value="ALL">All statuses</option>
+                                    <option value="OPEN">Open</option>
+                                    <option value="FULL">Full</option>
+                                    <option value="CLOSED">Closed</option>
+                                </select>
                             </div>
-                            {isLoading && <p className="mt-4 text-sm text-gray-500">Loading positions...</p>}
-                            {!isLoading && (!positions || positions.length === 0) && (
-                                <div className="mt-4 rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
-                                    No positions yet.
-                                </div>
-                            )}
-                            {!isLoading && positions && positions.length > 0 && (
-                                <div className="mt-4 space-y-3">
-                                    {positions
-                                        .filter((pos) =>
-                                            searchTerm
-                                                ? pos.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                                                  pos.required_skills.toLowerCase().includes(searchTerm.toLowerCase())
-                                                : true
-                                        )
-                                        .map((pos) => (
-                                        <div key={pos.id} className="rounded-xl border border-gray-200 p-4">
-                                            <p className="text-sm font-medium text-gray-900">{pos.title}</p>
-                                            <p className="text-xs text-gray-500">Organization: {pos.organization}</p>
-                                            <p className="text-xs text-gray-500">Capacity: {pos.capacity}</p>
-                                            <p className="text-xs text-gray-500">Skills: {pos.required_skills}</p>
-                                            <div className="mt-3 flex items-center gap-2">
-                                                <button
-                                                    onClick={() => startEdit(pos)}
-                                                    className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
-                                                >
-                                                    Edit
-                                                </button>
-                                                <button
-                                                    onClick={() => handleDelete(pos.id)}
-                                                    className="rounded-md border border-red-200 px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                                                >
-                                                    Delete
-                                                </button>
+                        </div>
+                    </div>
+
+                    {isLoading && <p className="p-6 text-sm text-slate-500">Loading positions...</p>}
+                    {!isLoading && filteredPositions.length === 0 && (
+                        <div className="m-5 rounded-xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">
+                            No internship positions match your filters.
+                        </div>
+                    )}
+
+                    {!isLoading && filteredPositions.length > 0 && (
+                        <>
+                            <div className="divide-y divide-slate-100">
+                                {paginatedPositions.map((position) => {
+                                    const organizationName = position.organization_details?.name || "Organization not assigned";
+                                    const occupancyPercent = position.capacity > 0 ? Math.min(100, Math.round((position.occupied / position.capacity) * 100)) : 0;
+
+                                    return (
+                                        <div key={position.id} className="p-5 hover:bg-slate-50">
+                                            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="flex flex-wrap items-center gap-2">
+                                                        <h3 className="text-base font-semibold text-slate-900">{position.title}</h3>
+                                                        <span className={`rounded-full border px-2 py-1 text-xs font-semibold ${statusBadge(position)}`}>
+                                                            {statusLabel(position)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="mt-1 flex items-center gap-2 text-sm font-medium text-slate-700">
+                                                        <Building2 className="h-4 w-4 text-slate-400" />
+                                                        {organizationName}
+                                                    </p>
+                                                    <p className="mt-2 line-clamp-2 text-sm text-slate-600">{position.description || "No description provided."}</p>
+                                                    <p className="mt-2 text-xs text-slate-500">Skills: {position.required_skills || "Not specified"}</p>
+                                                </div>
+
+                                                <div className="w-full rounded-xl border border-slate-200 bg-white p-4 xl:w-80">
+                                                    <div className="grid grid-cols-3 gap-3 text-center">
+                                                        <div>
+                                                            <p className="text-xs text-slate-500">Total</p>
+                                                            <p className="text-lg font-bold text-slate-900">{position.capacity}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-slate-500">Occupied</p>
+                                                            <p className="text-lg font-bold text-amber-700">{position.occupied}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-slate-500">Available</p>
+                                                            <p className="text-lg font-bold text-emerald-700">{position.available}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
+                                                        <div className="h-full rounded-full bg-slate-900" style={{ width: `${occupancyPercent}%` }} />
+                                                    </div>
+                                                    <p className="mt-2 text-center text-xs text-slate-500">{occupancyPercent}% occupied</p>
+                                                </div>
+
+                                                <div className="flex shrink-0 gap-2">
+                                                    <button
+                                                        onClick={() => startEdit(position)}
+                                                        className="inline-flex items-center rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                                    >
+                                                        <Edit className="mr-2 h-4 w-4" />
+                                                        Edit
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleStatus(position)}
+                                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                                                    >
+                                                        {position.is_active === false ? "Reopen" : "Close"}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(position.id)}
+                                                        className="inline-flex items-center rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Delete
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                                    );
+                                })}
+                            </div>
 
-                        {editId && (
-                            <div className="rounded-2xl bg-white p-6 shadow-sm">
-                                <h2 className="text-lg font-semibold text-gray-900">Edit Position</h2>
-                                <div className="mt-4 space-y-4">
-                                    <input
-                                        value={editTitle}
-                                        onChange={(e) => setEditTitle(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                        placeholder="Position title"
-                                    />
-                                    <select
-                                        value={editOrganization}
-                                        onChange={(e) => setEditOrganization(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2"
+                            <div className="flex flex-col gap-3 border-t border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
+                                <p className="text-sm text-slate-500">
+                                    Showing {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filteredPositions.length)} of {filteredPositions.length} positions
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        disabled={currentPage === 1}
+                                        onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 disabled:opacity-40"
                                     >
-                                        <option value="">Select organization</option>
-                                        {organizations?.map((org) => (
-                                            <option key={org.id} value={org.id}>
-                                                {org.name}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <textarea
-                                        value={editDescription}
-                                        onChange={(e) => setEditDescription(e.target.value)}
-                                        rows={3}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                        placeholder="Description"
-                                    />
-                                    <input
-                                        value={editSkills}
-                                        onChange={(e) => setEditSkills(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                        placeholder="Required skills"
-                                    />
-                                    <input
-                                        value={editCapacity}
-                                        onChange={(e) => setEditCapacity(e.target.value)}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2"
-                                        placeholder="Capacity"
-                                    />
-                                    <div className="flex items-center gap-2">
-                                        <button
-                                            onClick={handleUpdate}
-                                            disabled={isUpdating}
-                                            className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-60"
-                                        >
-                                            Save Changes
-                                        </button>
-                                        <button
-                                            onClick={() => setEditId(null)}
-                                            className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-50"
-                                        >
-                                            Cancel
-                                        </button>
-                                    </div>
+                                        Previous
+                                    </button>
+                                    <span className="text-sm text-slate-500">Page {currentPage} of {totalPages}</span>
+                                    <button
+                                        disabled={currentPage === totalPages}
+                                        onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                                        className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-700 disabled:opacity-40"
+                                    >
+                                        Next
+                                    </button>
                                 </div>
                             </div>
-                        )}
-                    </div>
+                        </>
+                    )}
                 </div>
+
+                {editId && (
+                    <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                        <h2 className="text-lg font-semibold text-slate-900">Edit Position</h2>
+                        <div className="mt-4 grid gap-4 md:grid-cols-2">
+                            <input
+                                value={editTitle}
+                                onChange={(event) => setEditTitle(event.target.value)}
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                placeholder="Position title"
+                            />
+                            <input
+                                value={editCapacity}
+                                onChange={(event) => setEditCapacity(event.target.value)}
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm"
+                                placeholder="Capacity"
+                                type="number"
+                            />
+                            <textarea
+                                value={editDescription}
+                                onChange={(event) => setEditDescription(event.target.value)}
+                                rows={3}
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                                placeholder="Description"
+                            />
+                            <input
+                                value={editSkills}
+                                onChange={(event) => setEditSkills(event.target.value)}
+                                className="rounded-lg border border-slate-300 px-3 py-2 text-sm md:col-span-2"
+                                placeholder="Required skills"
+                            />
+                        </div>
+                        <div className="mt-4 flex items-center gap-2">
+                            <button
+                                onClick={handleUpdate}
+                                disabled={isUpdating}
+                                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
+                            >
+                                {isUpdating ? "Saving..." : "Save Changes"}
+                            </button>
+                            <button
+                                onClick={() => setEditId(null)}
+                                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
