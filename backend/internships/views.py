@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+from django.core.mail import send_mail
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
@@ -399,5 +401,68 @@ class PartnerPortalViewSet(viewsets.ViewSet):
         org = self._org(request)
         supervisors = SupervisorProfile.objects.filter(organization__iexact=org.name).select_related("user")
         return Response(SupervisorProfileSerializer(supervisors, many=True).data)
+
+    @action(detail=False, methods=["post"])
+    def create_supervisor(self, request):
+        org = self._org(request)
+        if not is_partner(request.user) and not is_admin_or_coordinator(request.user):
+            return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
+
+        username = (request.data.get("username") or "").strip()
+        email = (request.data.get("email") or "").strip().lower()
+        position = (request.data.get("position") or "Internship Supervisor").strip()
+        phone = (request.data.get("phone") or "").strip()
+
+        if not username or not email:
+            return Response({"detail": "Supervisor name and email are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(email__iexact=email).exists():
+            return Response({"detail": "A user with this email already exists."}, status=status.HTTP_400_BAD_REQUEST)
+
+        password = User.generate_random_password()
+        supervisor_user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            role=User.Role.SUPERVISOR,
+            status=User.Status.ACTIVE,
+        )
+        if phone:
+            supervisor_user.phone = phone
+            supervisor_user.save(update_fields=["phone"])
+
+        supervisor_profile, _ = SupervisorProfile.objects.update_or_create(
+            user=supervisor_user,
+            defaults={"organization": org.name, "position": position},
+        )
+
+        email_sent = True
+        try:
+            frontend_login_url = getattr(settings, "FRONTEND_LOGIN_URL", "http://localhost:3000/auth")
+            send_mail(
+                subject="Your Supervisor Account Has Been Created",
+                message=(
+                    f"Hello {supervisor_user.username},\n\n"
+                    f"{org.name} has created a supervisor account for you on the Internship Placement and Tracking System.\n\n"
+                    f"Email: {supervisor_user.email}\n"
+                    f"Temporary Password: {password}\n"
+                    f"Role: Supervisor\n"
+                    f"Organization: {org.name}\n\n"
+                    f"Please log in at {frontend_login_url} and change your password immediately."
+                ),
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[supervisor_user.email],
+                fail_silently=False,
+            )
+        except Exception:
+            email_sent = False
+
+        return Response(
+            {
+                "message": "Supervisor created.",
+                "email_sent": email_sent,
+                "supervisor": SupervisorProfileSerializer(supervisor_profile).data,
+            },
+            status=status.HTTP_201_CREATED,
+        )
 
 # Create your views here.

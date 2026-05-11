@@ -8,14 +8,23 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useGetMyDetailsMutation } from "@/lib/redux/slices/AuthSlice";
+import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 
 export default function StudentReportsPage() {
     const { data: reports, isLoading } = useGetReportsQuery();
+    const { data: placements } = useGetPlacementsQuery();
     const [createReport, { isLoading: isSubmitting }] = useCreateReportMutation();
     const [getMyDetails, { data: userDetails }] = useGetMyDetailsMutation();
 
     const [type, setType] = useState<"WEEKLY" | "FINAL">("WEEKLY");
     const [file, setFile] = useState<File | null>(null);
+    const placement = placements?.find((item) => item.confirmed) || placements?.[0] || null;
+    const position = placement?.application_details?.position_details;
+    const organization = position?.organization_details;
+    const supervisorName =
+        placement?.supervisor_details?.user?.username ||
+        placement?.supervisor_details?.user?.email ||
+        "Pending assignment";
 
     const handleSubmit = async () => {
         if (!file) {
@@ -58,40 +67,92 @@ export default function StudentReportsPage() {
             return;
         }
         try {
-            if (!userDetails) {
-                await getMyDetails({}).unwrap();
-            }
-            const exporterName = userDetails?.username || "Student";
+            const currentUser = userDetails || await getMyDetails({}).unwrap();
+            const exporterName = currentUser?.username || "Student";
+            const exporterEmail = currentUser?.email || "Not available";
             const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width || 210;
+            const pageHeight = doc.internal.pageSize.height || 297;
 
             const logoDataUrl = await loadLogoDataUrl("/logo.png");
             if (logoDataUrl) {
-                doc.addImage(logoDataUrl, "PNG", 14, 10, 20, 20);
+                doc.addImage(logoDataUrl, "PNG", 14, 10, 18, 18);
             }
 
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, pageWidth, 8, "F");
+            doc.setFont("helvetica", "bold");
             doc.setFontSize(16);
-            doc.text("Internship Reports Summary", 40, 18);
+            doc.text("Internship Reports Portfolio", 38, 17);
+            doc.setFont("helvetica", "normal");
             doc.setFontSize(10);
-            doc.text(`Exported on ${new Date().toLocaleString()}`, 40, 24);
+            doc.setTextColor(90, 99, 116);
+            doc.text(`Generated on ${new Date().toLocaleString()}`, 38, 23);
+
+            doc.setDrawColor(226, 232, 240);
+            doc.line(14, 34, pageWidth - 14, 34);
+
+            autoTable(doc, {
+                startY: 40,
+                theme: "plain",
+                body: [
+                    ["Student", exporterName, "Email", exporterEmail],
+                    ["Host Company", organization?.name || "Not assigned", "Position", position?.title || "Not assigned"],
+                    ["Supervisor", supervisorName, "Placement Period", placement ? `${new Date(placement.start_date).toLocaleDateString()} - ${new Date(placement.end_date).toLocaleDateString()}` : "Not assigned"],
+                    ["Program", placement?.student_details?.program || reports[0]?.student_details?.program || "Not available", "Report Count", String(reports.length)],
+                ],
+                styles: { fontSize: 9, cellPadding: 2.5, textColor: [51, 65, 85] },
+                columnStyles: {
+                    0: { fontStyle: "bold", textColor: [15, 23, 42] },
+                    2: { fontStyle: "bold", textColor: [15, 23, 42] },
+                },
+            });
 
             const tableBody = reports.map((report) => [
-                report.id,
-                report.type,
+                `#${report.id}`,
+                report.type === "FINAL" ? "Final Report" : "Weekly Report",
                 report.submitted_at ? new Date(report.submitted_at).toLocaleDateString() : "-",
-                report.feedback ? "Yes" : "No",
+                report.feedback ? "Reviewed" : "Awaiting feedback",
+                report.feedback || "No feedback yet",
             ]);
 
             autoTable(doc, {
-                startY: 32,
-                head: [["ID", "Type", "Submitted", "Feedback"]],
+                startY: (doc as any).lastAutoTable?.finalY ? (doc as any).lastAutoTable.finalY + 8 : 82,
+                head: [["Report ID", "Type", "Submitted", "Review Status", "Supervisor / Partner Feedback"]],
                 body: tableBody,
-                styles: { fontSize: 9 },
-                headStyles: { fillColor: [37, 99, 235] },
+                styles: { fontSize: 8.5, cellPadding: 3, valign: "top" },
+                headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: "bold" },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                columnStyles: {
+                    0: { cellWidth: 22 },
+                    1: { cellWidth: 32 },
+                    2: { cellWidth: 28 },
+                    3: { cellWidth: 34 },
+                    4: { cellWidth: 70 },
+                },
             });
 
-            const pageHeight = doc.internal.pageSize.height || 297;
-            doc.setFontSize(9);
+            const finalY = (doc as any).lastAutoTable?.finalY || 120;
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(10);
+            doc.setTextColor(15, 23, 42);
+            doc.text("Declaration", 14, Math.min(finalY + 14, pageHeight - 28));
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8.5);
+            doc.setTextColor(71, 85, 105);
+            doc.text(
+                "This document summarizes internship reports submitted through the Online Internship Placement and Tracking System for academic tracking and review purposes.",
+                14,
+                Math.min(finalY + 20, pageHeight - 22),
+                { maxWidth: pageWidth - 28 },
+            );
+
+            doc.setDrawColor(226, 232, 240);
+            doc.line(14, pageHeight - 16, pageWidth - 14, pageHeight - 16);
+            doc.setFontSize(8);
+            doc.setTextColor(100, 116, 139);
             doc.text(`Exported by ${exporterName}`, 14, pageHeight - 10);
+            doc.text("Academic use only", pageWidth - 14, pageHeight - 10, { align: "right" });
 
             doc.save("internship-reports.pdf");
             toast.success("PDF exported.");

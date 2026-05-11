@@ -114,7 +114,7 @@ function ConfirmDialog({
 export default function StudentSidebar() {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const pathname = usePathname();
+    const pathname = usePathname() || "/student";
     const router = useRouter();
     const { data: session } = useSession();
 

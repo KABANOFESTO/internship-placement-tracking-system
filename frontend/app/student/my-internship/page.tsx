@@ -24,6 +24,8 @@ export default function MyInternshipPage() {
         placement?.supervisor_details?.user?.username ||
         placement?.supervisor_details?.user?.email ||
         null;
+    const position = placement?.application_details?.position_details;
+    const organization = position?.organization_details;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -46,6 +48,16 @@ export default function MyInternshipPage() {
                         )}
                         {placement && (
                             <div className="mt-4 space-y-3 text-sm text-gray-600">
+                                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Host Company</p>
+                                    <p className="mt-1 text-lg font-bold text-gray-900">{organization?.name || "Company pending confirmation"}</p>
+                                    <p className="mt-1 text-sm text-gray-600">{organization?.address || "Address not available"}</p>
+                                </div>
+                                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Assigned Position</p>
+                                    <p className="mt-1 text-base font-semibold text-gray-900">{position?.title || "Position pending confirmation"}</p>
+                                    <p className="mt-1 text-xs text-gray-500">{position?.required_skills ? `Required skills: ${position.required_skills}` : "Requirements not available"}</p>
+                                </div>
                                 <div>Program: {placement.student_details?.program || "Not available"}</div>
                                 <div>Status: {placement.confirmed ? "Confirmed" : "Pending confirmation"}</div>
                                 <div>Supervisor: {supervisorName || "Pending assignment"}</div>

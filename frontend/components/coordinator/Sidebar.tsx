@@ -122,7 +122,7 @@ function ConfirmDialog({
 export default function CoordinatorSidebar() {
     const [isMobileOpen, setIsMobileOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
-    const pathname = usePathname();
+    const pathname = usePathname() || "/coordinator";
     const { data: session } = useSession();
 
     const user = session?.user;

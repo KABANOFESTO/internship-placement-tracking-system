@@ -59,7 +59,6 @@ export interface SupervisorDetails {
     id: number;
     organization: string;
     position: string;
-    position_details?: InternshipPosition;
     user?: UserSummary;
 }
 
@@ -68,6 +67,7 @@ export interface Application {
     student: number;
     student_details?: StudentDetails;
     position: string;
+    position_details?: InternshipPosition;
     cover_letter: string;
     cv: string;
     status: ApplicationStatus;
@@ -164,7 +164,7 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             query: (params) => ({
                 url: "positions/recommendations/",
                 method: "GET",
-                params,
+                params: params || undefined,
             }),
             providesTags: ["Position"],
         }),
@@ -239,6 +239,13 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             query: () => ({ url: "partner/supervisors/", method: "GET" }),
             providesTags: ["Auth"],
         }),
+        createPartnerSupervisor: builder.mutation<
+            { message: string; email_sent: boolean; supervisor: SupervisorDetails },
+            { username: string; email: string; position: string; phone?: string }
+        >({
+            query: (data) => ({ url: "partner/create_supervisor/", method: "POST", body: data }),
+            invalidatesTags: ["Auth", "Analytics"],
+        }),
     }),
 });
 
@@ -270,4 +277,5 @@ export const {
     useAssignPlacementSupervisorMutation,
     useGetPartnerDashboardQuery,
     useGetPartnerSupervisorsQuery,
+    useCreatePartnerSupervisorMutation,
 } = internshipsSlice;

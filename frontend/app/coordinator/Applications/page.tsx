@@ -1,20 +1,43 @@
 "use client";
 
-import { useState } from "react";
-import { Download } from "lucide-react";
-import { useGetApplicationsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
+import { useMemo, useState } from "react";
+import { CheckCircle2, Download } from "lucide-react";
+import { ApplicationStatus, useGetApplicationsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
 
 export default function CoordinatorApplicationsPage() {
-    const { data: applications, isLoading } = useGetApplicationsQuery();
+    const { data: applications = [], isLoading } = useGetApplicationsQuery();
     const [updateApplication] = useUpdateApplicationMutation();
     const [bulkUpdate] = useBulkUpdateApplicationStatusMutation();
 
-    const [statusMap, setStatusMap] = useState<Record<string, string>>({});
+    const [statusMap, setStatusMap] = useState<Record<string, ApplicationStatus | "">>({});
     const [selected, setSelected] = useState<Record<string, boolean>>({});
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 8;
+
+    const sortedApplications = useMemo(
+        () => [...applications].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()),
+        [applications],
+    );
+    const totalPages = Math.max(1, Math.ceil(sortedApplications.length / pageSize));
+    const pageApplications = sortedApplications.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const pendingIds = sortedApplications.filter((app) => app.status === "PENDING").map((app) => app.id);
+    const approvedCount = sortedApplications.filter((app) => app.status === "APPROVED").length;
+    const rejectedCount = sortedApplications.filter((app) => app.status === "REJECTED").length;
+
+    const resolvePositionTitle = (app: { position: string; position_details?: { title?: string; organization_details?: { name?: string } } }) => {
+        const title = app.position_details?.title || "Internship Position";
+        const organization = app.position_details?.organization_details?.name;
+        return organization ? `${title} at ${organization}` : title;
+    };
+
+    const resolveStudentName = (app: { student_details?: { user?: { username?: string; email?: string } }; student?: number }) =>
+        app.student_details?.user?.username ||
+        app.student_details?.user?.email ||
+        `Student ${app.student}`;
 
     const handleUpdateStatus = async (id: string) => {
         const status = statusMap[id];
@@ -34,7 +57,7 @@ export default function CoordinatorApplicationsPage() {
         .filter(([, checked]) => checked)
         .map(([id]) => id);
 
-    const handleBulkUpdate = async (status: "PENDING" | "APPROVED" | "REJECTED") => {
+    const handleBulkUpdate = async (status: ApplicationStatus) => {
         if (selectedIds.length === 0) {
             toast.error("Select at least one application.");
             return;
@@ -47,8 +70,32 @@ export default function CoordinatorApplicationsPage() {
         }
     };
 
+    const handleApproveAllPending = async () => {
+        if (pendingIds.length === 0) {
+            toast.error("There are no pending applications to approve.");
+            return;
+        }
+        try {
+            await bulkUpdate({ ids: pendingIds, status: "APPROVED" }).unwrap();
+            setSelected({});
+            toast.success(`${pendingIds.length} pending application(s) approved.`);
+        } catch {
+            toast.error("Failed to approve pending applications.");
+        }
+    };
+
+    const toggleSelectCurrentPage = (checked: boolean) => {
+        setSelected((prev) => {
+            const next = { ...prev };
+            pageApplications.forEach((app) => {
+                next[app.id] = checked;
+            });
+            return next;
+        });
+    };
+
     const handleExportPdf = () => {
-        if (!applications || applications.length === 0) {
+        if (sortedApplications.length === 0) {
             toast.error("No applications to export.");
             return;
         }
@@ -61,10 +108,10 @@ export default function CoordinatorApplicationsPage() {
         autoTable(doc, {
             startY: 28,
             head: [["ID", "Student", "Position", "Status", "Created"]],
-            body: applications.map((app) => [
+            body: sortedApplications.map((app) => [
                 app.id,
-                app.student_details?.user?.username || `Student ${app.student}`,
-                app.position,
+                resolveStudentName(app),
+                resolvePositionTitle(app),
                 app.status,
                 new Date(app.created_at).toLocaleDateString(),
             ]),
@@ -77,14 +124,14 @@ export default function CoordinatorApplicationsPage() {
     };
 
     const handleExportExcel = () => {
-        if (!applications || applications.length === 0) {
+        if (sortedApplications.length === 0) {
             toast.error("No applications to export.");
             return;
         }
-        const data = applications.map((app) => ({
+        const data = sortedApplications.map((app) => ({
             id: app.id,
-            student: app.student_details?.user?.username || `Student ${app.student}`,
-            position: app.position,
+            student: resolveStudentName(app),
+            position: resolvePositionTitle(app),
             status: app.status,
             created_at: app.created_at,
         }));
@@ -103,7 +150,14 @@ export default function CoordinatorApplicationsPage() {
                         <h1 className="text-3xl font-bold text-gray-900">Applications</h1>
                         <p className="mt-1 text-sm text-gray-500">Review and update internship applications</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            onClick={handleApproveAllPending}
+                            className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                        >
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                            Approve All Pending
+                        </button>
                         <button
                             onClick={() => handleBulkUpdate("APPROVED")}
                             className="inline-flex items-center rounded-lg border border-emerald-200 px-3 py-2 text-sm text-emerald-700 hover:bg-emerald-50"
@@ -133,16 +187,48 @@ export default function CoordinatorApplicationsPage() {
                     </div>
                 </div>
 
+                <div className="mb-6 grid gap-4 md:grid-cols-4">
+                    {[
+                        ["Total applications", sortedApplications.length],
+                        ["Pending", pendingIds.length],
+                        ["Approved", approvedCount],
+                        ["Rejected", rejectedCount],
+                    ].map(([label, value]) => (
+                        <div key={label as string} className="rounded-2xl bg-white p-5 shadow-sm">
+                            <p className="text-sm text-gray-500">{label}</p>
+                            <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+                        </div>
+                    ))}
+                </div>
+
                 <div className="rounded-2xl bg-white p-6 shadow-sm">
                     {isLoading && <p className="text-sm text-gray-500">Loading applications...</p>}
-                    {!isLoading && (!applications || applications.length === 0) && (
+                    {!isLoading && sortedApplications.length === 0 && (
                         <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
                             No applications yet.
                         </div>
                     )}
-                    {!isLoading && applications && applications.length > 0 && (
+                    {!isLoading && sortedApplications.length > 0 && (
+                        <>
+                        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-gray-200 bg-gray-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm font-semibold text-gray-900">
+                                    Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, sortedApplications.length)} of {sortedApplications.length}
+                                </p>
+                                <p className="text-xs text-gray-500">{selectedIds.length} selected on all pages</p>
+                            </div>
+                            <label className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                                <input
+                                    type="checkbox"
+                                    checked={pageApplications.length > 0 && pageApplications.every((app) => selected[app.id])}
+                                    onChange={(e) => toggleSelectCurrentPage(e.target.checked)}
+                                />
+                                Select current page
+                            </label>
+                        </div>
+
                         <div className="space-y-3">
-                            {applications.map((app) => (
+                            {pageApplications.map((app) => (
                                 <div key={app.id} className="rounded-xl border border-gray-200 p-4">
                                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                         <div>
@@ -157,15 +243,16 @@ export default function CoordinatorApplicationsPage() {
                                                 Select
                                             </label>
                                             <p className="text-sm font-medium text-gray-900">
-                                                {app.student_details?.user?.username || `Student ID ${app.student}`}
+                                                {resolveStudentName(app)}
                                             </p>
-                                            <p className="text-xs text-gray-500">Position: {app.position}</p>
+                                            <p className="text-xs text-gray-500">Position: {resolvePositionTitle(app)}</p>
                                             <p className="text-xs text-gray-500">Status: {app.status}</p>
+                                            <p className="text-xs text-gray-400">Applied: {new Date(app.created_at).toLocaleString()}</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <select
                                                 value={statusMap[app.id] || ""}
-                                                onChange={(e) => setStatusMap((prev) => ({ ...prev, [app.id]: e.target.value }))}
+                                                onChange={(e) => setStatusMap((prev) => ({ ...prev, [app.id]: e.target.value as ApplicationStatus | "" }))}
                                                 className="rounded-md border border-gray-300 px-2 py-1 text-xs"
                                             >
                                                 <option value="">Set status</option>
@@ -184,6 +271,24 @@ export default function CoordinatorApplicationsPage() {
                                 </div>
                             ))}
                         </div>
+                        <div className="mt-6 flex items-center justify-center gap-2">
+                            <button
+                                disabled={currentPage === 1}
+                                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 disabled:opacity-40"
+                            >
+                                Previous
+                            </button>
+                            <span className="text-sm text-gray-500">Page {currentPage} of {totalPages}</span>
+                            <button
+                                disabled={currentPage === totalPages}
+                                onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 disabled:opacity-40"
+                            >
+                                Next
+                            </button>
+                        </div>
+                        </>
                     )}
                 </div>
             </div>
