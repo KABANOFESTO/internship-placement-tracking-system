@@ -124,7 +124,7 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             query: () => ({ url: "organizations/", method: "GET" }),
             providesTags: ["Organization"],
         }),
-        getMyOrganization: builder.query<Organization, void>({
+        getMyOrganization: builder.query<Organization | null, void>({
             query: () => ({ url: "organizations/me/", method: "GET" }),
             providesTags: ["Organization"],
         }),

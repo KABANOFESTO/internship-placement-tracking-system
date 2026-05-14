@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { EmptyState, PartnerCard, PartnerField, PartnerPageShell } from "@/components/partner/PartnerUi";
 import {
@@ -10,8 +12,10 @@ import {
 } from "@/lib/redux/slices/InternshipsSlice";
 
 export default function PartnerSupervisorsPage() {
-    const { data: supervisors = [] } = useGetPartnerSupervisorsQuery();
-    const { data: organization } = useGetMyOrganizationQuery();
+    const { status } = useSession();
+    const skipQueries = status !== "authenticated";
+    const { data: supervisors = [] } = useGetPartnerSupervisorsQuery(undefined, { skip: skipQueries });
+    const { data: organization } = useGetMyOrganizationQuery(undefined, { skip: skipQueries });
     const [createSupervisor, { isLoading }] = useCreatePartnerSupervisorMutation();
     const [form, setForm] = useState({
         username: "",
@@ -19,8 +23,14 @@ export default function PartnerSupervisorsPage() {
         position: "Internship Supervisor",
         phone: "",
     });
+    const hasOrganization = Boolean(organization?.id);
 
     const submitSupervisor = async () => {
+        if (!hasOrganization) {
+            toast.error("Create your organization profile before adding supervisors.");
+            return;
+        }
+
         if (!form.username.trim() || !form.email.trim() || !form.position.trim()) {
             toast.error("Supervisor name, email, and position are required.");
             return;
@@ -34,8 +44,9 @@ export default function PartnerSupervisorsPage() {
                 toast.warning("Supervisor added, but the credential email failed. Check backend email settings.");
             }
             setForm({ username: "", email: "", position: "Internship Supervisor", phone: "" });
-        } catch (error) {
-            toast.error("Could not add supervisor.");
+        } catch (error: any) {
+            const message = error?.data?.detail || "Could not add supervisor.";
+            toast.error(message);
             console.error("Create supervisor error", error);
         }
     };
@@ -62,9 +73,19 @@ export default function PartnerSupervisorsPage() {
                             The account will be linked to <span className="font-semibold text-slate-900">{organization?.name || "this partner organization"}</span>, activated immediately, and emailed a temporary password.
                         </div>
 
+                        {!hasOrganization && (
+                            <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                                Your partner organization profile has not been created yet. Complete it in{" "}
+                                <Link href="/partner/profile" className="font-semibold underline underline-offset-2">
+                                    Partner Profile
+                                </Link>{" "}
+                                before adding supervisors.
+                            </div>
+                        )}
+
                         <button
                             onClick={submitSupervisor}
-                            disabled={isLoading}
+                            disabled={isLoading || !hasOrganization}
                             className="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800 disabled:opacity-60"
                         >
                             {isLoading ? "Creating supervisor..." : "Create Supervisor & Email Credentials"}

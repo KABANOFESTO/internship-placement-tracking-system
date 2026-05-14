@@ -14,6 +14,7 @@ from .serializers import (
     InternshipPositionSerializer,
     ApplicationSerializer,
     PlacementSerializer,
+    SupervisorProfileSerializer,
 )
 
 
@@ -78,7 +79,7 @@ class OrganizationViewSet(viewsets.ModelViewSet):
         org = get_partner_organization(request.user)
         if request.method == "GET":
             if not org:
-                return Response({"detail": "Organization profile not found."}, status=status.HTTP_404_NOT_FOUND)
+                return Response(None, status=status.HTTP_200_OK)
             return Response(self.get_serializer(org).data)
 
         if not is_partner(request.user):
@@ -347,15 +348,38 @@ class PlacementViewSet(viewsets.ModelViewSet):
 class PartnerPortalViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    def _org(self, request):
+    def _org(self, request, required=True):
         org = get_partner_organization(request.user)
-        if not org and not is_admin_or_coordinator(request.user):
-            raise ValidationError("Partner organization profile not found.")
+        if not org and required and not is_admin_or_coordinator(request.user):
+            raise ValidationError({"detail": "Partner organization profile not found."})
         return org
 
     @action(detail=False, methods=["get"])
     def dashboard(self, request):
-        org = self._org(request)
+        org = self._org(request, required=False)
+        if not org:
+            return Response(
+                {
+                    "organization": None,
+                    "metrics": {
+                        "positions": 0,
+                        "active_positions": 0,
+                        "applications": 0,
+                        "pending_applications": 0,
+                        "assigned_students": 0,
+                        "supervisors": 0,
+                        "reports_pending_feedback": 0,
+                        "average_evaluation_score": None,
+                        "attendance_present": 0,
+                        "attendance_absent": 0,
+                    },
+                    "application_status": [],
+                    "placement_statistics": {"confirmed": 0, "unconfirmed": 0},
+                    "supervisors": [],
+                    "recent_applications": [],
+                    "assigned_students": [],
+                }
+            )
         positions = InternshipPosition.objects.filter(organization=org)
         applications = Application.objects.filter(position__organization=org)
         placements = Placement.objects.filter(application__position__organization=org)
@@ -398,7 +422,9 @@ class PartnerPortalViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=["get"])
     def supervisors(self, request):
-        org = self._org(request)
+        org = self._org(request, required=False)
+        if not org:
+            return Response([])
         supervisors = SupervisorProfile.objects.filter(organization__iexact=org.name).select_related("user")
         return Response(SupervisorProfileSerializer(supervisors, many=True).data)
 
