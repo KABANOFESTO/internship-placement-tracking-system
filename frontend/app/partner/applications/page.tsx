@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { EmptyState, PartnerCard, PartnerField, PartnerPageShell } from "@/components/partner/PartnerUi";
 import {
@@ -12,8 +13,10 @@ import {
 } from "@/lib/redux/slices/InternshipsSlice";
 
 export default function PartnerApplicationsPage() {
-    const { data: applications = [] } = useGetApplicationsQuery();
-    const { data: supervisors = [] } = useGetPartnerSupervisorsQuery();
+    const { status } = useSession();
+    const skipQueries = status !== "authenticated";
+    const { data: applications = [] } = useGetApplicationsQuery(undefined, { skip: skipQueries });
+    const { data: supervisors = [] } = useGetPartnerSupervisorsQuery(undefined, { skip: skipQueries });
     const [acceptApplication] = useAcceptApplicationMutation();
     const [rejectApplication] = useRejectApplicationMutation();
     const [assignSupervisor] = useAssignPlacementSupervisorMutation();

@@ -36,9 +36,9 @@ export default function PartnerProfilePage() {
     const saveProfile = async () => {
         try {
             await updateOrganization({ ...form, capacity: Number(form.capacity || 0) }).unwrap();
-            toast.success("Organization profile saved.");
-        } catch {
-            toast.error("Could not save organization profile.");
+            toast.success(organization ? "Organization profile saved." : "Organization profile created.");
+        } catch (error: any) {
+            toast.error(error?.data?.detail || "Could not save organization profile.");
         }
     };
 
