@@ -19,7 +19,7 @@ export default function SupervisorEvaluationPage() {
 
     const [studentId, setStudentId] = useState("");
     const [type, setType] = useState<"MIDTERM" | "FINAL">("MIDTERM");
-    const [score, setScore] = useState("");
+    const [score, setScore] = useState("50");
     const [feedback, setFeedback] = useState("");
 
     const assignedStudents = useMemo<AssignedStudentOption[]>(() => {
@@ -43,25 +43,27 @@ export default function SupervisorEvaluationPage() {
             toast.error("Select a student.");
             return;
         }
-        if (!score || Number(score) <= 0) {
-            toast.error("Score is required.");
+        const numericScore = Number(score);
+        if (Number.isNaN(numericScore) || numericScore < 0 || numericScore > 50) {
+            toast.error("Score must be between 0 and 50.");
             return;
         }
         try {
             await createEvaluation({
                 student: Number(studentId),
                 evaluation_type: type,
-                score: Number(score),
+                score: numericScore,
                 feedback,
             }).unwrap();
             toast.success("Evaluation submitted.");
             setStudentId("");
-            setScore("");
+            setScore("50");
             setFeedback("");
         } catch (error: any) {
             const studentError = error?.data?.student?.[0];
+            const scoreError = error?.data?.score?.[0];
             const nonFieldError = error?.data?.non_field_errors?.[0];
-            toast.error(studentError || nonFieldError || "Failed to submit evaluation.");
+            toast.error(scoreError || studentError || nonFieldError || "Failed to submit evaluation.");
         }
     };
 
@@ -110,12 +112,16 @@ export default function SupervisorEvaluationPage() {
                                 </select>
                             </div>
                             <div>
-                                <label className="text-sm font-medium text-gray-700">Score</label>
+                                <label className="text-sm font-medium text-gray-700">Score /50</label>
                                 <input
+                                    type="number"
+                                    min={0}
+                                    max={50}
                                     value={score}
                                     onChange={(e) => setScore(e.target.value)}
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                 />
+                                <p className="mt-1 text-xs text-gray-500">Midterm contributes 50 marks and final contributes 50 marks.</p>
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Feedback</label>
@@ -154,7 +160,10 @@ export default function SupervisorEvaluationPage() {
                                                     {evaluation.student_details?.user?.username || `Student ID: ${evaluation.student}`}
                                                 </p>
                                                 <p className="text-xs text-gray-500">Type: {evaluation.evaluation_type}</p>
-                                                <p className="text-xs text-gray-500">Score: {evaluation.score}</p>
+                                                <p className="text-xs text-gray-500">
+                                                    Score: {evaluation.score}/{evaluation.max_score ?? 50}
+                                                    {evaluation.score_out_of_20_component !== undefined ? ` (${evaluation.score_out_of_20_component}/10 contribution)` : ""}
+                                                </p>
                                                 {evaluation.feedback && (
                                                     <p className="mt-2 text-xs text-gray-600">{evaluation.feedback}</p>
                                                 )}

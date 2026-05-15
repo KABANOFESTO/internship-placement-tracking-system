@@ -56,6 +56,7 @@ export default function AdminApplicationsOverviewPage() {
     const pageApplications = filteredApplications.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
     const selectedIds = Object.entries(selected).filter(([, checked]) => checked).map(([id]) => id);
     const pendingCount = applications.filter((app) => app.status === "PENDING").length;
+    const awaitingAdminCount = applications.filter((app) => app.status === "PARTNER_ACCEPTED").length;
     const approvedCount = applications.filter((app) => app.status === "APPROVED").length;
     const rejectedCount = applications.filter((app) => app.status === "REJECTED").length;
 
@@ -172,11 +173,12 @@ export default function AdminApplicationsOverviewPage() {
                     </div>
                 </div>
 
-                <div className="mb-6 grid gap-4 md:grid-cols-4">
+                <div className="mb-6 grid gap-4 md:grid-cols-5">
                     {[
                         ["Total Applications", applications.length],
                         ["Pending", pendingCount],
-                        ["Approved", approvedCount],
+                        ["Awaiting Admin", awaitingAdminCount],
+                        ["Final Approved", approvedCount],
                         ["Rejected", rejectedCount],
                     ].map(([label, value]) => (
                         <div key={label as string} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -216,6 +218,7 @@ export default function AdminApplicationsOverviewPage() {
                                 >
                                     <option value="ALL">All Status</option>
                                     <option value="PENDING">Pending</option>
+                                    <option value="PARTNER_ACCEPTED">Partner Accepted</option>
                                     <option value="APPROVED">Approved</option>
                                     <option value="REJECTED">Rejected</option>
                                 </select>
@@ -271,6 +274,7 @@ export default function AdminApplicationsOverviewPage() {
                                                 >
                                                     <option value="">Set status</option>
                                                     <option value="PENDING">Pending</option>
+                                                    <option value="PARTNER_ACCEPTED">Partner Accepted</option>
                                                     <option value="APPROVED">Approved</option>
                                                     <option value="REJECTED">Rejected</option>
                                                 </select>

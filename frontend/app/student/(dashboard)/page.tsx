@@ -15,7 +15,7 @@ import {
 import { useGetMyDetailsMutation } from "@/lib/redux/slices/AuthSlice";
 import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 import { useGetProgressLogsQuery } from "@/lib/redux/slices/TrackingSlice";
-import { useGetEvaluationsQuery } from "@/lib/redux/slices/EvaluationsSlice";
+import { useGetEvaluationSummariesQuery, useGetEvaluationsQuery } from "@/lib/redux/slices/EvaluationsSlice";
 import { useGetReportsQuery } from "@/lib/redux/slices/ReportsSlice";
 import { useGetNotificationsQuery } from "@/lib/redux/slices/NotificationsSlice";
 import { useGetApplicationsQuery } from "@/lib/redux/slices/InternshipsSlice";
@@ -38,6 +38,7 @@ export default function StudentDashboard() {
     const { data: placements } = useGetPlacementsQuery();
     const { data: progressLogs } = useGetProgressLogsQuery();
     const { data: evaluations } = useGetEvaluationsQuery();
+    const { data: evaluationSummaries } = useGetEvaluationSummariesQuery();
     const { data: reports } = useGetReportsQuery();
     const { data: notifications } = useGetNotificationsQuery();
     const { data: applications } = useGetApplicationsQuery();
@@ -56,11 +57,10 @@ export default function StudentDashboard() {
         return progressLogs.reduce((sum, log) => sum + parseFloat(log.hours_completed || "0"), 0);
     }, [progressLogs]);
 
-    const evaluationAverage = useMemo(() => {
-        if (!evaluations || evaluations.length === 0) return null;
-        const total = evaluations.reduce((sum, e) => sum + (e.score || 0), 0);
-        return Math.round((total / evaluations.length) * 10) / 10;
-    }, [evaluations]);
+    const finalEvaluationScore = useMemo(() => {
+        const summary = evaluationSummaries?.[0];
+        return summary?.final_score_out_of_20 ?? null;
+    }, [evaluationSummaries]);
 
     const unreadNotifications = useMemo(() => {
         if (!notifications) return 0;
@@ -153,9 +153,9 @@ export default function StudentDashboard() {
             bgColor: "bg-purple-50",
         },
         {
-            title: "Average Score",
-            value: evaluationAverage !== null ? `${evaluationAverage}/5` : "N/A",
-            subtext: "Supervisor evaluations",
+            title: "Final Grade",
+            value: finalEvaluationScore !== null ? `${finalEvaluationScore}/20` : "N/A",
+            subtext: "Final converted grade",
             icon: Star,
             color: "text-yellow-600",
             bgColor: "bg-yellow-50",

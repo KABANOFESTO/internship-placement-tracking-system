@@ -11,6 +11,15 @@ import {
 } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 
+const PAGE_SIZE = 6;
+
+const statusLabel = (status: string) => {
+    if (status === "PARTNER_ACCEPTED") return "Accepted by Partner - Awaiting Admin Confirmation";
+    if (status === "APPROVED") return "Approved - Final Confirmation";
+    if (status === "REJECTED") return "Rejected";
+    return "Pending Partner Review";
+};
+
 export default function StudentApplicationsPage() {
     const [activeTab, setActiveTab] = useState<"applications" | "positions">("applications");
     const [searchTerm, setSearchTerm] = useState("");
@@ -18,29 +27,70 @@ export default function StudentApplicationsPage() {
     const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
     const [coverLetter, setCoverLetter] = useState("");
     const [cvFile, setCvFile] = useState<File | null>(null);
+    const [applicationsPage, setApplicationsPage] = useState(1);
+    const [positionsPage, setPositionsPage] = useState(1);
 
     const { data: applications } = useGetApplicationsQuery();
     const { data: positions } = useGetPositionsQuery();
     const { data: recommendations } = useGetRecommendationsQuery({ top: 6 });
     const [createApplication, { isLoading: isSubmitting }] = useCreateApplicationMutation();
 
-    const filteredApplications = useMemo(() => {
-        if (!applications) return [];
-        if (!searchTerm) return applications;
-        return applications.filter((app) => app.position.toLowerCase().includes(searchTerm.toLowerCase()));
-    }, [applications, searchTerm]);
-
     const positionMap = useMemo(() => {
-        const map = new Map<string, string>();
-        positions?.forEach((pos) => map.set(pos.id, pos.title));
+        const map = new Map<string, { title: string; organization: string }>();
+        positions?.forEach((pos) => {
+            map.set(pos.id, {
+                title: pos.title,
+                organization: pos.organization_details?.name || "Organization not available",
+            });
+        });
         return map;
     }, [positions]);
 
+    const resolvePositionTitle = (positionId: string, positionDetails?: { title?: string; organization_details?: { name?: string } }) => {
+        const fallback = positionMap.get(positionId);
+        const title = positionDetails?.title || fallback?.title || "Internship Position";
+        const organization = positionDetails?.organization_details?.name || fallback?.organization || "Organization not available";
+        return { title, organization, label: `${title} at ${organization}` };
+    };
+
+    const filteredApplications = useMemo(() => {
+        if (!applications) return [];
+        const query = searchTerm.trim().toLowerCase();
+        if (!query) return applications;
+        return applications.filter((app) => {
+            const position = resolvePositionTitle(app.position, app.position_details);
+            return [position.label, app.status, app.student_details?.program || ""].join(" ").toLowerCase().includes(query);
+        });
+    }, [applications, searchTerm, positionMap]);
+
     const filteredPositions = useMemo(() => {
         if (!positions) return [];
-        if (!searchTerm) return positions;
-        return positions.filter((pos) => pos.title.toLowerCase().includes(searchTerm.toLowerCase()));
+        const query = searchTerm.trim().toLowerCase();
+        if (!query) return positions;
+        return positions.filter((pos) =>
+            [
+                pos.title,
+                pos.organization_details?.name || "",
+                pos.description,
+                pos.required_skills,
+            ].join(" ").toLowerCase().includes(query)
+        );
     }, [positions, searchTerm]);
+
+    const applicationTotals = useMemo(() => ({
+        total: applications?.length || 0,
+        pending: applications?.filter((app) => app.status === "PENDING").length || 0,
+        awaiting: applications?.filter((app) => app.status === "PARTNER_ACCEPTED").length || 0,
+        approved: applications?.filter((app) => app.status === "APPROVED").length || 0,
+        rejected: applications?.filter((app) => app.status === "REJECTED").length || 0,
+    }), [applications]);
+
+    const applicationTotalPages = Math.max(1, Math.ceil(filteredApplications.length / PAGE_SIZE));
+    const positionTotalPages = Math.max(1, Math.ceil(filteredPositions.length / PAGE_SIZE));
+    const paginatedApplications = filteredApplications.slice((applicationsPage - 1) * PAGE_SIZE, applicationsPage * PAGE_SIZE);
+    const paginatedPositions = filteredPositions.slice((positionsPage - 1) * PAGE_SIZE, positionsPage * PAGE_SIZE);
+
+    const selectedPosition = selectedPositionId ? positions?.find((pos) => pos.id === selectedPositionId) : null;
 
     const handleSubmit = async () => {
         if (!selectedPositionId) {
@@ -115,7 +165,11 @@ export default function StudentApplicationsPage() {
                         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                         <input
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setApplicationsPage(1);
+                                setPositionsPage(1);
+                            }}
                             className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 focus:border-blue-500 focus:outline-none"
                             placeholder={activeTab === "applications" ? "Search applications..." : "Search positions..."}
                         />
@@ -123,19 +177,36 @@ export default function StudentApplicationsPage() {
                 </div>
 
                 {activeTab === "applications" && (
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <div className="space-y-6">
+                        <div className="grid gap-4 md:grid-cols-5">
+                            {[
+                                ["Total", applicationTotals.total],
+                                ["Pending", applicationTotals.pending],
+                                ["Awaiting Admin", applicationTotals.awaiting],
+                                ["Final Approved", applicationTotals.approved],
+                                ["Rejected", applicationTotals.rejected],
+                            ].map(([label, value]) => (
+                                <div key={label as string} className="rounded-2xl bg-white p-5 shadow-sm">
+                                    <p className="text-sm text-gray-500">{label}</p>
+                                    <p className="mt-2 text-3xl font-bold text-gray-900">{value}</p>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                         {filteredApplications.length === 0 && (
                             <div className="rounded-2xl bg-white p-8 text-center text-sm text-gray-500">
                                 No applications yet. Browse available positions to apply.
                             </div>
                         )}
-                        {filteredApplications.map((app) => (
-                            <div key={app.id} className="rounded-2xl bg-white p-6 shadow-sm">
+                        {paginatedApplications.map((app) => {
+                            const position = resolvePositionTitle(app.position, app.position_details);
+                            return (
+                            <div key={app.id} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <h3 className="text-lg font-semibold text-gray-900">Application #{app.id.slice(0, 8)}</h3>
+                                        <h3 className="text-lg font-semibold text-gray-900">{position.title}</h3>
                                         <p className="mt-1 text-sm text-gray-500">
-                                            Position: {positionMap.get(app.position) || app.position}
+                                            {position.organization}
                                         </p>
                                         <div className="mt-3 flex items-center gap-3 text-sm text-gray-500">
                                             <Calendar className="h-4 w-4" />
@@ -143,7 +214,7 @@ export default function StudentApplicationsPage() {
                                         </div>
                                     </div>
                                     <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-                                        {app.status}
+                                        {statusLabel(app.status)}
                                     </span>
                                 </div>
                                 <div className="mt-4 flex items-center gap-3 text-sm text-gray-500">
@@ -151,7 +222,20 @@ export default function StudentApplicationsPage() {
                                     Cover letter submitted
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
+                        </div>
+                        {filteredApplications.length > PAGE_SIZE && (
+                            <div className="flex items-center justify-center gap-2">
+                                <button disabled={applicationsPage === 1} onClick={() => setApplicationsPage((page) => Math.max(1, page - 1))} className="rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-40">
+                                    Previous
+                                </button>
+                                <span className="text-sm text-gray-500">Page {applicationsPage} of {applicationTotalPages}</span>
+                                <button disabled={applicationsPage === applicationTotalPages} onClick={() => setApplicationsPage((page) => Math.min(applicationTotalPages, page + 1))} className="rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-40">
+                                    Next
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -169,7 +253,7 @@ export default function StudentApplicationsPage() {
                                             <div className="flex items-start justify-between">
                                                 <div>
                                                     <h3 className="font-semibold text-gray-900">{pos.title}</h3>
-                                                    <p className="text-sm text-gray-500">Organization ID: {pos.organization}</p>
+                                                    <p className="text-sm text-gray-500">{pos.organization_details?.name || "Organization not available"}</p>
                                                 </div>
                                                 <span className="rounded-full bg-green-50 px-2 py-1 text-xs text-green-700">
                                                     Match {Math.round((pos.match_score || 0) * 100)}%
@@ -197,12 +281,13 @@ export default function StudentApplicationsPage() {
                                     No positions available at the moment.
                                 </div>
                             )}
-                            {filteredPositions.map((pos) => (
-                                <div key={pos.id} className="rounded-2xl bg-white p-6 shadow-sm">
+                            {paginatedPositions.map((pos) => (
+                                <div key={pos.id} className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
                                     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                         <div>
                                             <h3 className="text-xl font-semibold text-gray-900">{pos.title}</h3>
-                                            <p className="mt-1 text-sm text-gray-500">Organization ID: {pos.organization}</p>
+                                            <p className="mt-1 text-sm font-medium text-gray-700">{pos.organization_details?.name || "Organization not available"}</p>
+                                            <p className="text-xs text-gray-500">{pos.organization_details?.address || "Address not available"}</p>
                                             <p className="mt-2 text-sm text-gray-600">{pos.description}</p>
                                             <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
                                                 <span className="flex items-center gap-1">
@@ -229,6 +314,17 @@ export default function StudentApplicationsPage() {
                                 </div>
                             ))}
                         </div>
+                        {filteredPositions.length > PAGE_SIZE && (
+                            <div className="flex items-center justify-center gap-2">
+                                <button disabled={positionsPage === 1} onClick={() => setPositionsPage((page) => Math.max(1, page - 1))} className="rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-40">
+                                    Previous
+                                </button>
+                                <span className="text-sm text-gray-500">Page {positionsPage} of {positionTotalPages}</span>
+                                <button disabled={positionsPage === positionTotalPages} onClick={() => setPositionsPage((page) => Math.min(positionTotalPages, page + 1))} className="rounded-lg border border-gray-200 px-3 py-2 text-sm disabled:opacity-40">
+                                    Next
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
@@ -253,10 +349,16 @@ export default function StudentApplicationsPage() {
                                     <option value="">Choose a position</option>
                                     {positions?.map((pos) => (
                                         <option key={pos.id} value={pos.id}>
-                                            {pos.title}
+                                            {pos.title} - {pos.organization_details?.name || "Organization not available"}
                                         </option>
                                     ))}
                                 </select>
+                                {selectedPosition && (
+                                    <div className="mt-3 rounded-lg bg-blue-50 p-3 text-sm text-blue-900">
+                                        Applying for <span className="font-semibold">{selectedPosition.title}</span> at{" "}
+                                        <span className="font-semibold">{selectedPosition.organization_details?.name || "the selected organization"}</span>.
+                                    </div>
+                                )}
                             </div>
                             <div>
                                 <label className="text-sm font-medium text-gray-700">Cover Letter</label>

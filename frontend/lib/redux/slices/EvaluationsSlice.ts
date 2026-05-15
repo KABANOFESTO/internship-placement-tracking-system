@@ -23,9 +23,24 @@ export interface Evaluation {
     supervisor: number | null;
     evaluation_type: EvaluationType;
     score: number;
+    max_score?: number;
+    percentage?: number;
+    score_out_of_20_component?: number;
     feedback?: string;
     created_at: string;
     ratings?: EvaluationRating[];
+}
+
+export interface EvaluationSummary {
+    student: NonNullable<Evaluation["student_details"]>;
+    midterm: Evaluation | null;
+    final: Evaluation | null;
+    midterm_score: number | null;
+    final_score: number | null;
+    total_score: number;
+    total_max_score: number;
+    final_score_out_of_20: number | null;
+    is_complete: boolean;
 }
 
 export interface EvaluationCriterion {
@@ -48,6 +63,8 @@ export interface EvaluationStatistics {
     total: number;
     by_type: Array<{ evaluation_type: EvaluationType; count: number }>;
     avg_score: number | null;
+    avg_score_out_of_20?: number | null;
+    completed_students?: number;
 }
 
 export const evaluationsSlice = apiSlice.injectEndpoints({
@@ -58,19 +75,23 @@ export const evaluationsSlice = apiSlice.injectEndpoints({
         }),
         createEvaluation: builder.mutation<Evaluation, Partial<Evaluation>>({
             query: (data) => ({ url: "evaluations/", method: "POST", body: data }),
-            invalidatesTags: ["Evaluation"],
+            invalidatesTags: ["Evaluation", "Analytics"],
         }),
         updateEvaluation: builder.mutation<Evaluation, { id: number; data: Partial<Evaluation> }>({
             query: ({ id, data }) => ({ url: `evaluations/${id}/`, method: "PUT", body: data }),
-            invalidatesTags: ["Evaluation"],
+            invalidatesTags: ["Evaluation", "Analytics"],
         }),
         deleteEvaluation: builder.mutation<void, number>({
             query: (id) => ({ url: `evaluations/${id}/`, method: "DELETE" }),
-            invalidatesTags: ["Evaluation"],
+            invalidatesTags: ["Evaluation", "Analytics"],
         }),
         getEvaluationStatistics: builder.query<EvaluationStatistics, void>({
             query: () => ({ url: "evaluations/statistics/", method: "GET" }),
             providesTags: ["Analytics"],
+        }),
+        getEvaluationSummaries: builder.query<EvaluationSummary[], void>({
+            query: () => ({ url: "evaluations/summaries/", method: "GET" }),
+            providesTags: ["Evaluation"],
         }),
         getEvaluationCriteria: builder.query<EvaluationCriterion[], void>({
             query: () => ({ url: "evaluation-criteria/", method: "GET" }),
@@ -113,6 +134,7 @@ export const {
     useUpdateEvaluationMutation,
     useDeleteEvaluationMutation,
     useGetEvaluationStatisticsQuery,
+    useGetEvaluationSummariesQuery,
     useGetEvaluationCriteriaQuery,
     useCreateEvaluationCriterionMutation,
     useUpdateEvaluationCriterionMutation,
