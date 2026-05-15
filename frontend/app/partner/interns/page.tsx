@@ -71,12 +71,14 @@ export default function PartnerInternsPage() {
                 <h2 className="font-semibold text-slate-900">Performance Monitoring</h2>
                 <div className="mt-4 grid gap-3 md:grid-cols-3">
                     {assignedStudents.length ? assignedStudents.map((student) => {
-                        const score = evaluations.find((item) => item.student === student?.id)?.score;
+                        const latestEvaluation = evaluations.find((item) => item.student === student?.id);
                         const attendanceCount = attendance.filter((item) => item.student === student?.id).length;
                         return student && (
                             <div key={student.id} className="rounded-lg border border-slate-200 p-4">
                                 <p className="font-semibold text-slate-900">{student.user?.username}</p>
-                                <p className="text-sm text-slate-500">Latest score: {score ?? "No evaluation"}</p>
+                                <p className="text-sm text-slate-500">
+                                    Latest score: {latestEvaluation ? `${latestEvaluation.score}/${latestEvaluation.max_score ?? 50}` : "No evaluation"}
+                                </p>
                                 <p className="text-sm text-slate-500">Attendance records: {attendanceCount}</p>
                             </div>
                         );

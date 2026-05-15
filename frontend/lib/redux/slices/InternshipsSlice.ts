@@ -35,7 +35,7 @@ export interface InternshipPosition {
     matched_skills?: string[];
 }
 
-export type ApplicationStatus = "PENDING" | "APPROVED" | "REJECTED";
+export type ApplicationStatus = "PENDING" | "PARTNER_ACCEPTED" | "APPROVED" | "REJECTED";
 
 export interface UserSummary {
     id: number;
@@ -104,6 +104,7 @@ export interface PartnerDashboard {
         active_positions: number;
         applications: number;
         pending_applications: number;
+        awaiting_admin_confirmation?: number;
         assigned_students: number;
         supervisors: number;
         reports_pending_feedback: number;

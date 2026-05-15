@@ -169,11 +169,11 @@ export default function AdminReportsPage() {
                                                     {evaluation.student_details?.user?.username || `Student ${evaluation.student}`}
                                                 </p>
                                                 <p className="text-xs text-gray-500">Type: {evaluation.evaluation_type}</p>
-                                                <p className="text-xs text-gray-500">Score: {evaluation.score}</p>
+                                                <p className="text-xs text-gray-500">Score: {evaluation.score}/{evaluation.max_score ?? 50}</p>
                                             </div>
                                             <div className="inline-flex items-center text-xs text-amber-600">
                                                 <Star className="mr-1 h-3 w-3" />
-                                                {evaluation.score}
+                                                {evaluation.score}/{evaluation.max_score ?? 50}
                                             </div>
                                         </div>
                                         {evaluation.feedback && (

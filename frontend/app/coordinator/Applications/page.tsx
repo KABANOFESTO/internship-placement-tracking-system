@@ -25,8 +25,10 @@ export default function CoordinatorApplicationsPage() {
     const totalPages = Math.max(1, Math.ceil(sortedApplications.length / pageSize));
     const pageApplications = sortedApplications.slice((currentPage - 1) * pageSize, currentPage * pageSize);
     const pendingIds = sortedApplications.filter((app) => app.status === "PENDING").map((app) => app.id);
+    const awaitingAdminIds = sortedApplications.filter((app) => app.status === "PARTNER_ACCEPTED").map((app) => app.id);
     const approvedCount = sortedApplications.filter((app) => app.status === "APPROVED").length;
     const rejectedCount = sortedApplications.filter((app) => app.status === "REJECTED").length;
+    const awaitingAdminCount = awaitingAdminIds.length;
 
     const resolvePositionTitle = (app: { position: string; position_details?: { title?: string; organization_details?: { name?: string } } }) => {
         const title = app.position_details?.title || "Internship Position";
@@ -71,16 +73,17 @@ export default function CoordinatorApplicationsPage() {
     };
 
     const handleApproveAllPending = async () => {
-        if (pendingIds.length === 0) {
-            toast.error("There are no pending applications to approve.");
+        const idsToApprove = awaitingAdminIds.length > 0 ? awaitingAdminIds : pendingIds;
+        if (idsToApprove.length === 0) {
+            toast.error("There are no applications awaiting approval.");
             return;
         }
         try {
-            await bulkUpdate({ ids: pendingIds, status: "APPROVED" }).unwrap();
+            await bulkUpdate({ ids: idsToApprove, status: "APPROVED" }).unwrap();
             setSelected({});
-            toast.success(`${pendingIds.length} pending application(s) approved.`);
+            toast.success(`${idsToApprove.length} application(s) approved with final confirmation.`);
         } catch {
-            toast.error("Failed to approve pending applications.");
+            toast.error("Failed to approve applications.");
         }
     };
 
@@ -156,7 +159,7 @@ export default function CoordinatorApplicationsPage() {
                             className="inline-flex items-center rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
                         >
                             <CheckCircle2 className="mr-2 h-4 w-4" />
-                            Approve All Pending
+                            Final Approve Awaiting
                         </button>
                         <button
                             onClick={() => handleBulkUpdate("APPROVED")}
@@ -187,11 +190,12 @@ export default function CoordinatorApplicationsPage() {
                     </div>
                 </div>
 
-                <div className="mb-6 grid gap-4 md:grid-cols-4">
+                <div className="mb-6 grid gap-4 md:grid-cols-5">
                     {[
                         ["Total applications", sortedApplications.length],
                         ["Pending", pendingIds.length],
-                        ["Approved", approvedCount],
+                        ["Awaiting Admin", awaitingAdminCount],
+                        ["Final Approved", approvedCount],
                         ["Rejected", rejectedCount],
                     ].map(([label, value]) => (
                         <div key={label as string} className="rounded-2xl bg-white p-5 shadow-sm">
@@ -257,6 +261,7 @@ export default function CoordinatorApplicationsPage() {
                                             >
                                                 <option value="">Set status</option>
                                                 <option value="PENDING">Pending</option>
+                                                <option value="PARTNER_ACCEPTED">Partner Accepted</option>
                                                 <option value="APPROVED">Approved</option>
                                                 <option value="REJECTED">Rejected</option>
                                             </select>

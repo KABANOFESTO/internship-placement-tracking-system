@@ -231,7 +231,10 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             org = get_partner_organization(request.user)
             if not is_partner(request.user) or application.position.organization != org:
                 return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
-        application.status = Application.Status.APPROVED
+        if is_admin_or_coordinator(request.user):
+            application.status = Application.Status.APPROVED
+        else:
+            application.status = Application.Status.PARTNER_ACCEPTED
         application.save(update_fields=["status"])
         return Response(self.get_serializer(application).data)
 
@@ -330,7 +333,10 @@ class PlacementViewSet(viewsets.ModelViewSet):
                 "confirmed": True,
             },
         )
-        application.status = Application.Status.APPROVED
+        if is_partner(request.user):
+            application.status = Application.Status.PARTNER_ACCEPTED
+        else:
+            application.status = Application.Status.APPROVED
         application.save(update_fields=["status"])
         return Response(self.get_serializer(placement).data)
 
@@ -402,6 +408,7 @@ class PartnerPortalViewSet(viewsets.ViewSet):
                     "active_positions": positions.filter(is_active=True).count(),
                     "applications": applications.count(),
                     "pending_applications": applications.filter(status=Application.Status.PENDING).count(),
+                    "awaiting_admin_confirmation": applications.filter(status=Application.Status.PARTNER_ACCEPTED).count(),
                     "assigned_students": placements.count(),
                     "supervisors": supervisors.count(),
                     "reports_pending_feedback": reports.filter(feedback="").count(),

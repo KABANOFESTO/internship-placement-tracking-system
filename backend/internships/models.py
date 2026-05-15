@@ -52,9 +52,10 @@ class InternshipPosition(models.Model):
     
 class Application(models.Model):
     class Status(models.TextChoices):
-        PENDING = "PENDING"
-        APPROVED = "APPROVED"
-        REJECTED = "REJECTED"
+        PENDING = "PENDING", "Pending"
+        PARTNER_ACCEPTED = "PARTNER_ACCEPTED", "Partner Accepted"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     student = models.ForeignKey("authapi.StudentProfile", on_delete=models.CASCADE)

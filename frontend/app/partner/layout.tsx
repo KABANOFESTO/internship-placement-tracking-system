@@ -30,8 +30,9 @@ export default function PartnerLayout({ children }: Readonly<{ children: React.R
             localStorage.setItem("access", session.user.token);
         }
 
-        if (session.user.refreshToken) {
-            localStorage.setItem("refresh", session.user.refreshToken);
+        const refreshToken = (session.user as typeof session.user & { refreshToken?: string }).refreshToken;
+        if (refreshToken) {
+            localStorage.setItem("refresh", refreshToken);
         }
 
         setAuthReady(true);

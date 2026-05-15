@@ -40,6 +40,13 @@ export default function PartnerApplicationsPage() {
         }
     };
 
+    const statusLabel = (status: string) => {
+        if (status === "PARTNER_ACCEPTED") return "Accepted - Awaiting Admin Confirmation";
+        if (status === "APPROVED") return "Approved by Admin";
+        if (status === "REJECTED") return "Rejected";
+        return "Pending Partner Review";
+    };
+
     return (
         <PartnerPageShell>
             <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
@@ -54,7 +61,7 @@ export default function PartnerApplicationsPage() {
                                         <p className="text-sm text-slate-500">{application.position_details?.title}</p>
                                         <p className="mt-2 text-sm text-slate-600">{application.cover_letter}</p>
                                     </div>
-                                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{application.status}</span>
+                                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">{statusLabel(application.status)}</span>
                                 </div>
                                 <div className="mt-3 flex gap-2">
                                     <button onClick={() => acceptApplication(application.id)} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white">Accept</button>
@@ -70,7 +77,7 @@ export default function PartnerApplicationsPage() {
                     <div className="mt-4 space-y-3">
                         <select value={assignment.application} onChange={(event) => setAssignment({ ...assignment, application: event.target.value })} className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm">
                             <option value="">Select accepted application</option>
-                            {applications.filter((item) => item.status === "APPROVED").map((item) => (
+                                {applications.filter((item) => item.status === "PARTNER_ACCEPTED" || item.status === "APPROVED").map((item) => (
                                 <option key={item.id} value={item.id}>{item.student_details?.user?.username} - {item.position_details?.title}</option>
                             ))}
                         </select>
