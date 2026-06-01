@@ -381,18 +381,6 @@ export default function LoginPage() {
                                     </a>
                                 </div>
                             </div>
-
-                            {/* Role hint */}
-                            <div
-                                className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
-                                style={{ background: "#f0f4ff", border: "1px solid #dde6f8" }}
-                            >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 mt-0.5">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M12 16v-4M12 8h.01" />
-                                </svg>
-                            </div>
-
                             {/* Submit */}
                             <button
                                 type="submit"

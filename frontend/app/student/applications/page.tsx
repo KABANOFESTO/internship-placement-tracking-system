@@ -183,7 +183,7 @@ export default function StudentApplicationsPage() {
                                 ["Total", applicationTotals.total],
                                 ["Pending", applicationTotals.pending],
                                 ["Awaiting Admin", applicationTotals.awaiting],
-                                ["Final Approved", applicationTotals.approved],
+                                ["Final Approve", applicationTotals.approved],
                                 ["Rejected", applicationTotals.rejected],
                             ].map(([label, value]) => (
                                 <div key={label as string} className="rounded-2xl bg-white p-5 shadow-sm">
