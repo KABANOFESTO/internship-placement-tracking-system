@@ -195,7 +195,7 @@ export default function CoordinatorApplicationsPage() {
                         ["Total applications", sortedApplications.length],
                         ["Pending", pendingIds.length],
                         ["Awaiting Admin", awaitingAdminCount],
-                        ["Final Approved", approvedCount],
+                        ["Final Approve", approvedCount],
                         ["Rejected", rejectedCount],
                     ].map(([label, value]) => (
                         <div key={label as string} className="rounded-2xl bg-white p-5 shadow-sm">
@@ -262,8 +262,8 @@ export default function CoordinatorApplicationsPage() {
                                                 <option value="">Set status</option>
                                                 <option value="PENDING">Pending</option>
                                                 <option value="PARTNER_ACCEPTED">Partner Accepted</option>
-                                                <option value="APPROVED">Approved</option>
-                                                <option value="REJECTED">Rejected</option>
+                                                <option value="APPROVED">Approve</option>
+                                                <option value="REJECTED">Rejecte</option>
                                             </select>
                                             <button
                                                 onClick={() => handleUpdateStatus(app.id)}

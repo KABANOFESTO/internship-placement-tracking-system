@@ -362,32 +362,6 @@ export default function StudentSidebar() {
                         </div>
                     ))}
                 </div>
-
-                {/* ── Upgrade nudge card ── */}
-                <div className="relative z-10 upgrade-card">
-                    <div className="flex items-center gap-2 mb-2">
-                        <div
-                            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ background: "linear-gradient(135deg,#2563eb,#3b82f6)" }}
-                        >
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                            </svg>
-                        </div>
-                        <span className="sora text-xs font-bold text-white">Complete Your Profile</span>
-                    </div>
-                    <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.42)" }}>
-                        Add your skills & documents to improve placement matching.
-                    </p>
-                    <Link
-                        href="/student/profile"
-                        className="block w-full text-center text-xs font-semibold py-2 rounded-lg text-white transition-opacity hover:opacity-85"
-                        style={{ background: "linear-gradient(135deg,#1e3a8a,#2563eb)" }}
-                    >
-                        Update Profile
-                    </Link>
-                </div>
-
                 {/* ── Logout ── */}
                 <div className="relative z-10 px-3 pb-5" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: "12px" }}>
                     <button className="btn-logout" onClick={handleLogout}>
