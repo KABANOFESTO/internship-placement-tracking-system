@@ -43,6 +43,9 @@ export interface UserSummary {
     email: string;
     role: string;
     profile_picture?: string | null;
+    first_name?: string;
+    last_name?: string;
+    phone?: string;
 }
 
 export interface StudentDetails {

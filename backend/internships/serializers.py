@@ -6,7 +6,7 @@ from auth.models import StudentProfile, SupervisorProfile, User
 class UserBasicSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "role", "profile_picture"]
+        fields = ["id", "username", "email", "role", "profile_picture", "first_name", "last_name", "phone"]
 
 
 class StudentProfileSerializer(serializers.ModelSerializer):
