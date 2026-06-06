@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BriefcaseBusiness, Building2, Edit, Trash2, Users } from "lucide-react";
+import { BriefcaseBusiness, Building2, CalendarDays, Edit, Mail, Trash2, Users, X } from "lucide-react";
 import {
     InternshipPosition,
     useDeletePositionMutation,
@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 
 const PAGE_SIZE = 8;
+type CapacityMetric = "total" | "occupied" | "available";
 
 export default function AdminInternshipManagementPage() {
     const { data: positions = [], isLoading } = useGetPositionsQuery();
@@ -27,6 +28,7 @@ export default function AdminInternshipManagementPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState<"ALL" | "OPEN" | "FULL" | "CLOSED">("ALL");
     const [currentPage, setCurrentPage] = useState(1);
+    const [capacityDetails, setCapacityDetails] = useState<{ positionId: string; metric: CapacityMetric } | null>(null);
 
     const occupiedByPosition = useMemo(() => {
         const counts: Record<string, number> = {};
@@ -37,6 +39,17 @@ export default function AdminInternshipManagementPage() {
             }
         });
         return counts;
+    }, [placements]);
+
+    const placementsByPosition = useMemo(() => {
+        const grouped: Record<string, typeof placements> = {};
+        placements.forEach((placement) => {
+            const positionId = placement.application_details?.position;
+            if (positionId && placement.confirmed) {
+                grouped[positionId] = [...(grouped[positionId] || []), placement];
+            }
+        });
+        return grouped;
     }, [placements]);
 
     const enrichedPositions = useMemo(() => {
@@ -75,6 +88,13 @@ export default function AdminInternshipManagementPage() {
     const totalOccupied = enrichedPositions.reduce((sum, position) => sum + position.occupied, 0);
     const totalAvailable = Math.max(totalCapacity - totalOccupied, 0);
     const openPositions = enrichedPositions.filter((position) => !position.isClosed && !position.isFull).length;
+    const selectedPosition = capacityDetails
+        ? enrichedPositions.find((position) => position.id === capacityDetails.positionId) || null
+        : null;
+    const selectedPlacements = selectedPosition ? placementsByPosition[selectedPosition.id] || [] : [];
+    const selectedOccupancyPercent = selectedPosition && selectedPosition.capacity > 0
+        ? Math.min(100, Math.round((selectedPosition.occupied / selectedPosition.capacity) * 100))
+        : 0;
 
     const startEdit = (position: InternshipPosition) => {
         setEditId(position.id);
@@ -230,18 +250,24 @@ export default function AdminInternshipManagementPage() {
 
                                                 <div className="w-full rounded-xl border border-slate-200 bg-white p-4 xl:w-80">
                                                     <div className="grid grid-cols-3 gap-3 text-center">
-                                                        <div>
-                                                            <p className="text-xs text-slate-500">Total</p>
-                                                            <p className="text-lg font-bold text-slate-900">{position.capacity}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs text-slate-500">Occupied</p>
-                                                            <p className="text-lg font-bold text-amber-700">{position.occupied}</p>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-xs text-slate-500">Available</p>
-                                                            <p className="text-lg font-bold text-emerald-700">{position.available}</p>
-                                                        </div>
+                                                        <CapacityButton
+                                                            label="Total"
+                                                            value={position.capacity}
+                                                            tone="slate"
+                                                            onClick={() => setCapacityDetails({ positionId: position.id, metric: "total" })}
+                                                        />
+                                                        <CapacityButton
+                                                            label="Occupied"
+                                                            value={position.occupied}
+                                                            tone="amber"
+                                                            onClick={() => setCapacityDetails({ positionId: position.id, metric: "occupied" })}
+                                                        />
+                                                        <CapacityButton
+                                                            label="Available"
+                                                            value={position.available}
+                                                            tone="emerald"
+                                                            onClick={() => setCapacityDetails({ positionId: position.id, metric: "available" })}
+                                                        />
                                                     </div>
                                                     <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100">
                                                         <div className="h-full rounded-full bg-slate-900" style={{ width: `${occupancyPercent}%` }} />
@@ -351,6 +377,195 @@ export default function AdminInternshipManagementPage() {
                         </div>
                     </div>
                 )}
+
+                {capacityDetails && selectedPosition && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
+                        <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl">
+                            <div className="flex items-start justify-between gap-4 border-b border-slate-200 p-5">
+                                <div>
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Capacity Details</p>
+                                    <h2 className="mt-1 text-xl font-bold text-slate-900">{selectedPosition.title}</h2>
+                                    <p className="mt-1 flex items-center gap-2 text-sm text-slate-600">
+                                        <Building2 className="h-4 w-4 text-slate-400" />
+                                        {selectedPosition.organization_details?.name || "Organization not assigned"}
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={() => setCapacityDetails(null)}
+                                    className="rounded-lg border border-slate-200 p-2 text-slate-500 hover:bg-slate-50"
+                                    aria-label="Close capacity details"
+                                >
+                                    <X className="h-4 w-4" />
+                                </button>
+                            </div>
+
+                            <div className="p-5">
+                                <div className="grid gap-3 sm:grid-cols-3">
+                                    <DetailStat label="Total Capacity" value={selectedPosition.capacity} active={capacityDetails.metric === "total"} />
+                                    <DetailStat label="Occupied" value={selectedPosition.occupied} active={capacityDetails.metric === "occupied"} tone="amber" />
+                                    <DetailStat label="Available" value={selectedPosition.available} active={capacityDetails.metric === "available"} tone="emerald" />
+                                </div>
+
+                                <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-900">{selectedOccupancyPercent}% occupied</p>
+                                            <p className="text-xs text-slate-500">
+                                                Status: {statusLabel(selectedPosition)} | Available slots are calculated from confirmed placements.
+                                            </p>
+                                        </div>
+                                        <span className={`w-fit rounded-full border px-3 py-1 text-xs font-semibold ${statusBadge(selectedPosition)}`}>
+                                            {statusLabel(selectedPosition)}
+                                        </span>
+                                    </div>
+                                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+                                        <div className="h-full rounded-full bg-slate-900" style={{ width: `${selectedOccupancyPercent}%` }} />
+                                    </div>
+                                </div>
+
+                                {capacityDetails.metric === "total" && (
+                                    <div className="mt-5 grid gap-4 md:grid-cols-2">
+                                        <InfoPanel title="Position Scope" lines={[
+                                            `Capacity: ${selectedPosition.capacity} students`,
+                                            `Occupied: ${selectedPosition.occupied} confirmed placements`,
+                                            `Available: ${selectedPosition.available} remaining slots`,
+                                        ]} />
+                                        <InfoPanel title="Requirements" lines={[
+                                            selectedPosition.required_skills ? `Skills: ${selectedPosition.required_skills}` : "Skills: Not specified",
+                                            selectedPosition.location ? `Location: ${selectedPosition.location}` : "Location: Not specified",
+                                            selectedPosition.start_date ? `Starts: ${selectedPosition.start_date}` : "Start date: Not specified",
+                                        ]} />
+                                    </div>
+                                )}
+
+                                {capacityDetails.metric === "occupied" && (
+                                    <div className="mt-5">
+                                        <h3 className="text-sm font-semibold text-slate-900">Assigned Students</h3>
+                                        {selectedPlacements.length === 0 ? (
+                                            <div className="mt-3 rounded-xl border border-dashed border-slate-300 p-6 text-center text-sm text-slate-500">
+                                                No confirmed students are assigned to this position yet.
+                                            </div>
+                                        ) : (
+                                            <div className="mt-3 space-y-3">
+                                                {selectedPlacements.map((placement) => (
+                                                    <div key={placement.id} className="rounded-xl border border-slate-200 p-4">
+                                                        <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                                                            <div>
+                                                                <p className="font-semibold text-slate-900">
+                                                                    {placement.student_details?.user?.username || `Student ${placement.student_details?.id || placement.application}`}
+                                                                </p>
+                                                                <p className="mt-1 text-sm text-slate-500">
+                                                                    Student ID: {placement.student_details?.student_id || "Not provided"}
+                                                                </p>
+                                                                <p className="text-sm text-slate-500">
+                                                                    Supervisor: {placement.supervisor_details?.user?.username || "Unassigned"}
+                                                                </p>
+                                                            </div>
+                                                            <div className="space-y-1 text-sm text-slate-500">
+                                                                {placement.student_details?.user?.email && (
+                                                                    <p className="flex items-center gap-2">
+                                                                        <Mail className="h-4 w-4 text-slate-400" />
+                                                                        {placement.student_details.user.email}
+                                                                    </p>
+                                                                )}
+                                                                <p className="flex items-center gap-2">
+                                                                    <CalendarDays className="h-4 w-4 text-slate-400" />
+                                                                    {placement.start_date} to {placement.end_date}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                {capacityDetails.metric === "available" && (
+                                    <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-5">
+                                        <h3 className="text-sm font-semibold text-emerald-900">Availability</h3>
+                                        <p className="mt-2 text-sm text-emerald-800">
+                                            This position currently has {selectedPosition.available} available {selectedPosition.available === 1 ? "slot" : "slots"}.
+                                            {selectedPosition.isClosed
+                                                ? " The position is closed, so students cannot be placed until it is reopened."
+                                                : selectedPosition.isFull
+                                                  ? " The position is full and cannot accept more confirmed placements."
+                                                  : " It is open for additional qualified students."}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function CapacityButton({
+    label,
+    value,
+    tone,
+    onClick,
+}: {
+    label: string;
+    value: number;
+    tone: "slate" | "amber" | "emerald";
+    onClick: () => void;
+}) {
+    const color = {
+        slate: "text-slate-900 hover:border-slate-400 hover:bg-slate-50",
+        amber: "text-amber-700 hover:border-amber-300 hover:bg-amber-50",
+        emerald: "text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50",
+    }[tone];
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className={`rounded-lg border border-transparent px-2 py-2 transition text-center ${color}`}
+            aria-label={`View ${label.toLowerCase()} capacity details`}
+        >
+            <span className="block text-xs text-slate-500">{label}</span>
+            <span className="mt-1 block text-lg font-bold">{value}</span>
+        </button>
+    );
+}
+
+function DetailStat({
+    label,
+    value,
+    active,
+    tone = "slate",
+}: {
+    label: string;
+    value: number;
+    active: boolean;
+    tone?: "slate" | "amber" | "emerald";
+}) {
+    const activeClass = {
+        slate: "border-slate-400 bg-slate-50 text-slate-900",
+        amber: "border-amber-300 bg-amber-50 text-amber-800",
+        emerald: "border-emerald-300 bg-emerald-50 text-emerald-800",
+    }[tone];
+
+    return (
+        <div className={`rounded-xl border p-4 ${active ? activeClass : "border-slate-200 bg-white text-slate-900"}`}>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+            <p className="mt-2 text-2xl font-bold">{value}</p>
+        </div>
+    );
+}
+
+function InfoPanel({ title, lines }: { title: string; lines: string[] }) {
+    return (
+        <div className="rounded-xl border border-slate-200 p-4">
+            <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+            <div className="mt-3 space-y-2">
+                {lines.map((line) => (
+                    <p key={line} className="text-sm text-slate-600">{line}</p>
+                ))}
             </div>
         </div>
     );
