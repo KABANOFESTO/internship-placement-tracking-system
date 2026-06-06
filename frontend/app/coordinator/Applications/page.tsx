@@ -263,7 +263,7 @@ export default function CoordinatorApplicationsPage() {
                                                 <option value="PENDING">Pending</option>
                                                 <option value="PARTNER_ACCEPTED">Partner Accepted</option>
                                                 <option value="APPROVED">Approve</option>
-                                                <option value="REJECTED">Rejecte</option>
+                                                <option value="REJECTED">Rejected</option>
                                             </select>
                                             <button
                                                 onClick={() => handleUpdateStatus(app.id)}
