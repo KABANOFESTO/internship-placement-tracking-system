@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { Briefcase, ClipboardCheck, FileText, TrendingUp, CalendarCheck } from "lucide-react";
+import { Briefcase, ClipboardCheck, FileText, TrendingUp, CalendarCheck, Mail, Phone, MapPin } from "lucide-react";
 import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 import { useGetProgressLogsQuery } from "@/lib/redux/slices/TrackingSlice";
 import { useGetEvaluationsQuery } from "@/lib/redux/slices/EvaluationsSlice";
@@ -77,14 +77,47 @@ export default function SupervisorDashboard() {
                         </div>
                         {placements && placements.length > 0 ? (
                             <div className="space-y-3">
-                                {placements.slice(0, 5).map((placement) => (
-                                    <div key={placement.id} className="rounded-xl border border-gray-200 p-3">
-                                        <p className="text-sm font-medium text-gray-900">
-                                            {placement.student_details?.user?.username || `Placement #${placement.id}`}
-                                        </p>
-                                        <p className="text-xs text-gray-500">Program: {placement.student_details?.program || "N/A"}</p>
+                                {placements.slice(0, 5).map((placement) => {
+                                    const student = placement.student_details;
+                                    const user = student?.user;
+                                    const position = placement.application_details?.position_details;
+                                    const studentName = getDisplayName(user);
+
+                                    return (
+                                    <div key={placement.id} className="rounded-xl border border-gray-200 p-4 transition hover:border-blue-200 hover:bg-blue-50/30">
+                                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {studentName || `Placement #${placement.id}`}
+                                                </p>
+                                                <p className="mt-1 text-xs font-medium text-blue-700">
+                                                    {position?.title || "Position not assigned"}
+                                                </p>
+                                                <p className="text-xs text-gray-500">Program: {student?.program || "N/A"}</p>
+                                                <p className="text-xs text-gray-500">Student ID: {student?.student_id || "N/A"}</p>
+                                            </div>
+                                            <span className={`w-fit rounded-full px-3 py-1 text-xs font-semibold ${placement.confirmed ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>
+                                                {placement.confirmed ? "Confirmed" : "Pending"}
+                                            </span>
+                                        </div>
+                                        <div className="mt-3 grid gap-2 text-xs text-gray-500 sm:grid-cols-2">
+                                            <span className="flex items-center gap-2">
+                                                <Mail className="h-3.5 w-3.5 text-gray-400" />
+                                                {user?.email || "No email provided"}
+                                            </span>
+                                            <span className="flex items-center gap-2">
+                                                <Phone className="h-3.5 w-3.5 text-gray-400" />
+                                                {user?.phone || "No phone provided"}
+                                            </span>
+                                            <span className="flex items-center gap-2 sm:col-span-2">
+                                                <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                                                {position?.organization_details?.name || "Organization not assigned"}
+                                                {position?.location ? ` | ${position.location}` : ""}
+                                            </span>
+                                        </div>
                                     </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         ) : (
                             <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center text-sm text-gray-500">
@@ -162,4 +195,10 @@ export default function SupervisorDashboard() {
             </div>
         </div>
     );
+}
+
+function getDisplayName(user?: { username?: string; first_name?: string; last_name?: string; email?: string }) {
+    if (!user) return "";
+    const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ").trim();
+    return fullName || user.username || user.email || "";
 }
