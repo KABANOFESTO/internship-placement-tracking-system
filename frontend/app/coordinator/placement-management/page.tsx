@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { BriefcaseBusiness, Building2, CalendarDays, Mail, UserRound } from "lucide-react";
 import { useGetApplicationsQuery, useCreatePlacementMutation, useGetPlacementsQuery, useUpdatePlacementMutation } from "@/lib/redux/slices/InternshipsSlice";
 import { useGetUsersByRoleQuery } from "@/lib/redux/slices/AuthSlice";
 import { toast } from "sonner";
@@ -26,6 +27,10 @@ export default function CoordinatorPlacementManagementPage() {
     const [endDate, setEndDate] = useState("");
 
     const supervisorOptions: SupervisorOption[] = (supervisors || []) as SupervisorOption[];
+    const selectedApplication = useMemo(
+        () => applications?.find((app) => app.id === applicationId) || null,
+        [applications, applicationId],
+    );
 
     const suggestedSupervisorId = (() => {
         const availableSupervisors = supervisorOptions.filter((sup) => sup.supervisor_profile_id);
@@ -103,12 +108,24 @@ export default function CoordinatorPlacementManagementPage() {
         }
     };
 
+    const resolveStudentName = (student?: { user?: { username?: string; email?: string; first_name?: string; last_name?: string } }) => {
+        const user = student?.user;
+        if (!user) return "Student not available";
+        return [user.first_name, user.last_name].filter(Boolean).join(" ").trim() || user.username || user.email || "Student";
+    };
+
+    const resolvePositionLabel = (app?: { position_details?: { title?: string; organization_details?: { name?: string } } }) => {
+        const title = app?.position_details?.title || "Internship Position";
+        const organization = app?.position_details?.organization_details?.name || "Organization not assigned";
+        return `${title} at ${organization}`;
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="p-6 lg:p-8">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold text-gray-900">Placement Workflow</h1>
-                    <p className="mt-1 text-sm text-gray-500">Assign an application, set dates, and choose a supervisor</p>
+                    <p className="mt-1 text-sm text-gray-500">Assign approved applications, set dates, and choose a supervisor</p>
                 </div>
 
                 <div className="rounded-2xl bg-white p-6 shadow-sm">
@@ -135,10 +152,22 @@ export default function CoordinatorPlacementManagementPage() {
                                 <option value="">Choose application</option>
                                 {applications?.map((app) => (
                                     <option key={app.id} value={app.id}>
-                                        {app.student_details?.user?.username || `Student ID ${app.student}`}
+                                        {resolveStudentName(app.student_details)} - {resolvePositionLabel(app)}
                                     </option>
                                 ))}
                             </select>
+                            {selectedApplication && (
+                                <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+                                    <p className="text-sm font-semibold text-blue-950">Selected Application</p>
+                                    <div className="mt-3 grid gap-2 text-sm text-blue-900 md:grid-cols-2">
+                                        <p>Student: <span className="font-semibold">{resolveStudentName(selectedApplication.student_details)}</span></p>
+                                        <p>Status: <span className="font-semibold">{selectedApplication.status}</span></p>
+                                        <p className="md:col-span-2">Position: <span className="font-semibold">{resolvePositionLabel(selectedApplication)}</span></p>
+                                        <p>Program: <span className="font-semibold">{selectedApplication.student_details?.program || "N/A"}</span></p>
+                                        <p>Student ID: <span className="font-semibold">{selectedApplication.student_details?.student_id || "N/A"}</span></p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
@@ -230,25 +259,63 @@ export default function CoordinatorPlacementManagementPage() {
                         </div>
                     ) : (
                         <div className="mt-4 space-y-3">
-                            {placements.map((placement) => (
+                            {placements.map((placement) => {
+                                const app = placement.application_details;
+                                const student = placement.student_details;
+                                const position = app?.position_details;
+                                const organization = position?.organization_details;
+                                return (
                                 <div key={placement.id} className="rounded-xl border border-gray-200 p-4">
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                        <div>
-                                            <p className="text-sm font-medium text-gray-900">
-                                                {placement.student_details?.user?.username || `Placement ${placement.id}`}
-                                            </p>
-                                            <p className="text-xs text-gray-500">Application ID: {placement.application}</p>
-                                            <p className="text-xs text-gray-500">Supervisor: {placement.supervisor || "Unassigned"}</p>
+                                    <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                                        <div className="min-w-0 flex-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="text-base font-semibold text-gray-900">
+                                                    {resolveStudentName(student)}
+                                                </p>
+                                                <span className={`rounded-full px-3 py-1 text-xs font-semibold ${placement.confirmed ? "bg-emerald-50 text-emerald-700" : "bg-yellow-50 text-yellow-700"}`}>
+                                                    {placement.confirmed ? "Confirmed" : "Pending"}
+                                                </span>
+                                            </div>
+                                            <div className="mt-3 grid gap-2 text-sm text-gray-600 md:grid-cols-2">
+                                                <p className="flex items-center gap-2">
+                                                    <UserRound className="h-4 w-4 text-gray-400" />
+                                                    Student ID: <span className="font-medium text-gray-900">{student?.student_id || "N/A"}</span>
+                                                </p>
+                                                <p className="flex items-center gap-2">
+                                                    <Mail className="h-4 w-4 text-gray-400" />
+                                                    <span className="break-all">{student?.user?.email || "No email provided"}</span>
+                                                </p>
+                                                <p className="flex items-center gap-2 md:col-span-2">
+                                                    <BriefcaseBusiness className="h-4 w-4 text-gray-400" />
+                                                    {position?.title || "Position not assigned"}
+                                                </p>
+                                                <p className="flex items-center gap-2 md:col-span-2">
+                                                    <Building2 className="h-4 w-4 text-gray-400" />
+                                                    {organization?.name || "Organization not assigned"}
+                                                    {position?.location ? ` | ${position.location}` : ""}
+                                                </p>
+                                                <p className="flex items-center gap-2 md:col-span-2">
+                                                    <CalendarDays className="h-4 w-4 text-gray-400" />
+                                                    {placement.start_date} to {placement.end_date}
+                                                </p>
+                                            </div>
                                         </div>
-                                        <button
-                                            onClick={() => handleConfirmToggle(placement.id, placement.confirmed)}
-                                            className={`rounded-md px-3 py-1 text-xs ${placement.confirmed ? "bg-emerald-600 text-white" : "bg-yellow-500 text-white"}`}
-                                        >
-                                            {placement.confirmed ? "Confirmed" : "Confirm"}
-                                        </button>
+                                        <div className="w-full rounded-xl border border-gray-200 bg-gray-50 p-4 xl:w-80">
+                                            <p className="text-sm font-semibold text-gray-900">Supervisor</p>
+                                            <p className="mt-2 text-sm text-gray-700">
+                                                {placement.supervisor_details?.user?.username || "Unassigned"}
+                                            </p>
+                                            <p className="text-xs text-gray-500">{placement.supervisor_details?.user?.email || "No supervisor email"}</p>
+                                            <button
+                                                onClick={() => handleConfirmToggle(placement.id, placement.confirmed)}
+                                                className={`mt-4 w-full rounded-md px-3 py-2 text-xs font-semibold ${placement.confirmed ? "bg-emerald-600 text-white" : "bg-yellow-500 text-white"}`}
+                                            >
+                                                {placement.confirmed ? "Confirmed" : "Confirm Placement"}
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            ))}
+                            )})}
                         </div>
                     )}
                 </div>

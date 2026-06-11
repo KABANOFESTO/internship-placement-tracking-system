@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Send } from "lucide-react";
+import { Send, UserRound } from "lucide-react";
 import { useGetAllMessagesQuery, useGetCommunicationUsersQuery, useSendMessageMutation } from "@/lib/redux/slices/CommunicationSlices";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -117,7 +117,14 @@ export default function CoordinatorMessagesPage() {
                                         <div className="flex items-start justify-between">
                                             <div>
                                                 <p className="text-sm font-medium text-gray-900">{message.subject}</p>
-                                                <p className="mt-1 text-xs text-gray-500">{message.message_content}</p>
+                                                <div className="mt-2 grid gap-1 text-xs text-gray-500 sm:grid-cols-2">
+                                                    <p className="flex items-center gap-1">
+                                                        <UserRound className="h-3 w-3" />
+                                                        From: {formatUser(message.sender_details)}{message.sender_details?.role ? ` (${message.sender_details.role})` : ""}
+                                                    </p>
+                                                    <p>To: {formatUser(message.receiver_details)}{message.receiver_details?.role ? ` (${message.receiver_details.role})` : ""}</p>
+                                                </div>
+                                                <p className="mt-2 text-xs text-gray-600">{message.message_content}</p>
                                             </div>
                                             <span className="text-xs text-gray-400">
                                                 {formatDistanceToNow(new Date(message.timestamp), { addSuffix: true })}
@@ -132,4 +139,8 @@ export default function CoordinatorMessagesPage() {
             </div>
         </div>
     );
+}
+
+function formatUser(user?: { full_name?: string; username?: string; email?: string }) {
+    return user?.full_name || user?.username || user?.email || "Unknown user";
 }

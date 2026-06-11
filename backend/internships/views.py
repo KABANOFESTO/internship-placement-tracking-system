@@ -102,8 +102,10 @@ class InternshipPositionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = InternshipPosition.objects.select_related("organization").all().order_by("-created_at")
-        if is_admin_or_coordinator(self.request.user) or hasattr(self.request.user, "studentprofile"):
+        if is_admin_or_coordinator(self.request.user):
             return queryset
+        if hasattr(self.request.user, "studentprofile"):
+            return queryset.filter(is_active=True)
         if is_partner(self.request.user):
             org = get_partner_organization(self.request.user)
             return queryset.filter(organization=org) if org else queryset.none()
@@ -159,7 +161,7 @@ class InternshipPositionViewSet(viewsets.ModelViewSet):
 
         student_skills = {s.strip().lower() for s in (student.skills or "").split(",") if s.strip()}
         recommendations = []
-        for position in InternshipPosition.objects.all():
+        for position in InternshipPosition.objects.filter(is_active=True):
             required_skills = {s.strip().lower() for s in (position.required_skills or "").split(",") if s.strip()}
             if not required_skills:
                 score = 0
@@ -206,6 +208,9 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             serializer.save()
             return
         if hasattr(self.request.user, "studentprofile"):
+            position = serializer.validated_data.get("position")
+            if position and not position.is_active:
+                raise ValidationError("This internship position is closed and no longer accepts applications.")
             serializer.save(student=self.request.user.studentprofile)
             return
         raise ValidationError("Student profile not found for current user.")
@@ -397,7 +402,7 @@ class PartnerPortalViewSet(viewsets.ViewSet):
 
         attendance = AttendanceRecord.objects.filter(student_id__in=assigned_student_ids)
         evaluations = Evaluation.objects.filter(student_id__in=assigned_student_ids)
-        reports = Report.objects.filter(student_id__in=assigned_student_ids)
+        reports = Report.objects.filter(student_id__in=assigned_student_ids, supervisor_approved=True)
         supervisors = SupervisorProfile.objects.filter(organization__iexact=org.name)
 
         return Response(

@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FileText, Download, MessageSquare } from "lucide-react";
-import { useGetReportsQuery, useSetReportFeedbackMutation } from "@/lib/redux/slices/ReportsSlice";
+import { CheckCircle2, FileText, Download, MessageSquare } from "lucide-react";
+import { useApproveReportMutation, useGetReportsQuery, useSetReportFeedbackMutation } from "@/lib/redux/slices/ReportsSlice";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { useGetMyAuditLogsQuery } from "@/lib/redux/slices/AuditLogsSlice";
@@ -10,6 +10,7 @@ import { useGetMyAuditLogsQuery } from "@/lib/redux/slices/AuditLogsSlice";
 export default function SupervisorReportsPage() {
     const { data: reports, isLoading } = useGetReportsQuery();
     const [setFeedback, { isLoading: isSaving }] = useSetReportFeedbackMutation();
+    const [approveReport, { isLoading: isApproving }] = useApproveReportMutation();
     const [feedbackMap, setFeedbackMap] = useState<Record<number, string>>({});
     const { data: auditLogs } = useGetMyAuditLogsQuery();
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
@@ -37,6 +38,15 @@ export default function SupervisorReportsPage() {
             toast.success("Feedback saved.");
         } catch {
             toast.error("Failed to save feedback.");
+        }
+    };
+
+    const handleApprove = async (id: number) => {
+        try {
+            await approveReport({ id, feedback: feedbackMap[id] }).unwrap();
+            toast.success("Report approved and released to coordinators.");
+        } catch {
+            toast.error("Failed to approve report.");
         }
     };
 
@@ -72,6 +82,9 @@ export default function SupervisorReportsPage() {
                                                 Submitted {formatDistanceToNow(new Date(report.submitted_at), { addSuffix: true })}
                                             </p>
                                             {report.feedback && <p className="mt-2 text-xs text-gray-600">Current feedback: {report.feedback}</p>}
+                                            <span className={`mt-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${report.supervisor_approved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                                                {report.supervisor_approved ? "Approved for coordinator review" : "Pending supervisor approval"}
+                                            </span>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {report.fileUrl && (
@@ -103,9 +116,17 @@ export default function SupervisorReportsPage() {
                                             <button
                                                 onClick={() => handleSaveFeedback(report.id)}
                                                 disabled={isSaving}
-                                                className="rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700 disabled:opacity-60"
+                                                className="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50 disabled:opacity-60"
                                             >
                                                 Save Feedback
+                                            </button>
+                                            <button
+                                                onClick={() => handleApprove(report.id)}
+                                                disabled={isApproving || report.supervisor_approved}
+                                                className="ml-2 inline-flex items-center rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                            >
+                                                <CheckCircle2 className="mr-1 h-3 w-3" />
+                                                {report.supervisor_approved ? "Approved" : "Approve Report"}
                                             </button>
                                         </div>
                                     </div>

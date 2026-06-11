@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FileText, Download } from "lucide-react";
+import { CheckCircle2, FileText, Download } from "lucide-react";
 import { useGetReportsQuery, useSetReportFeedbackMutation } from "@/lib/redux/slices/ReportsSlice";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
@@ -44,7 +44,7 @@ export default function CoordinatorReportsPage() {
                 <div className="mb-6 flex items-center justify-between">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900">Reports</h1>
-                        <p className="mt-1 text-sm text-gray-500">Review and provide feedback</p>
+                        <p className="mt-1 text-sm text-gray-500">Review reports after supervisor approval</p>
                     </div>
                     <FileText className="h-6 w-6 text-gray-400" />
                 </div>
@@ -53,7 +53,7 @@ export default function CoordinatorReportsPage() {
                     {isLoading && <p className="text-sm text-gray-500">Loading reports...</p>}
                     {!isLoading && normalizedReports.length === 0 && (
                         <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center text-sm text-gray-500">
-                            No reports submitted yet.
+                            No supervisor-approved reports are available yet.
                         </div>
                     )}
                     {!isLoading && normalizedReports.length > 0 && (
@@ -68,6 +68,11 @@ export default function CoordinatorReportsPage() {
                                             </p>
                                             <p className="text-xs text-gray-500">
                                                 Submitted {formatDistanceToNow(new Date(report.submitted_at), { addSuffix: true })}
+                                            </p>
+                                            <p className="mt-2 inline-flex items-center rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                                                <CheckCircle2 className="mr-1 h-3 w-3" />
+                                                Approved by {report.supervisor_approved_by_details?.user?.username || "Supervisor"}
+                                                {report.supervisor_approved_at ? ` on ${new Date(report.supervisor_approved_at).toLocaleDateString()}` : ""}
                                             </p>
                                             {report.feedback && <p className="mt-2 text-xs text-gray-600">Current feedback: {report.feedback}</p>}
                                         </div>

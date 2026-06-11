@@ -18,11 +18,31 @@ export interface Report {
             email: string;
             role: string;
             profile_picture?: string | null;
+            first_name?: string;
+            last_name?: string;
+            phone?: string | null;
         };
     };
     type: ReportType;
     file: string;
     feedback?: string;
+    supervisor_approved: boolean;
+    supervisor_approved_at?: string | null;
+    supervisor_approved_by?: number | null;
+    supervisor_approved_by_details?: {
+        id: number;
+        organization: string;
+        position: string;
+        user?: {
+            id: number;
+            username: string;
+            email: string;
+            role: string;
+            first_name?: string;
+            last_name?: string;
+            phone?: string | null;
+        } | null;
+    } | null;
     submitted_at: string;
 }
 
@@ -67,6 +87,14 @@ export const reportsSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: ["Report"],
         }),
+        approveReport: builder.mutation<Report, { id: number; feedback?: string }>({
+            query: ({ id, feedback }) => ({
+                url: `reports/${id}/approve/`,
+                method: "POST",
+                body: feedback !== undefined ? { feedback } : {},
+            }),
+            invalidatesTags: ["Report"],
+        }),
     }),
 });
 
@@ -77,4 +105,5 @@ export const {
     useUpdateReportMutation,
     useDeleteReportMutation,
     useSetReportFeedbackMutation,
+    useApproveReportMutation,
 } = reportsSlice;

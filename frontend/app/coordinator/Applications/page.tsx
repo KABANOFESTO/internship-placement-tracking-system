@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, Download } from "lucide-react";
+import { CheckCircle2, Download, GraduationCap, Mail, Phone } from "lucide-react";
 import { ApplicationStatus, useGetApplicationsQuery, useUpdateApplicationMutation, useBulkUpdateApplicationStatusMutation } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
@@ -36,10 +36,13 @@ export default function CoordinatorApplicationsPage() {
         return organization ? `${title} at ${organization}` : title;
     };
 
-    const resolveStudentName = (app: { student_details?: { user?: { username?: string; email?: string } }; student?: number }) =>
-        app.student_details?.user?.username ||
-        app.student_details?.user?.email ||
-        `Student ${app.student}`;
+    const resolveStudentName = (app: { student_details?: { user?: { username?: string; email?: string; first_name?: string; last_name?: string } }; student?: number }) => {
+        const user = app.student_details?.user;
+        return [user?.first_name, user?.last_name].filter(Boolean).join(" ").trim() ||
+            user?.username ||
+            user?.email ||
+            `Student ${app.student}`;
+    };
 
     const handleUpdateStatus = async (id: string) => {
         const status = statusMap[id];
@@ -110,10 +113,11 @@ export default function CoordinatorApplicationsPage() {
 
         autoTable(doc, {
             startY: 28,
-            head: [["ID", "Student", "Position", "Status", "Created"]],
+            head: [["Student", "Student ID", "Program", "Position", "Status", "Created"]],
             body: sortedApplications.map((app) => [
-                app.id,
                 resolveStudentName(app),
+                app.student_details?.student_id || "N/A",
+                app.student_details?.program || "N/A",
                 resolvePositionTitle(app),
                 app.status,
                 new Date(app.created_at).toLocaleDateString(),
@@ -134,6 +138,9 @@ export default function CoordinatorApplicationsPage() {
         const data = sortedApplications.map((app) => ({
             id: app.id,
             student: resolveStudentName(app),
+            student_id: app.student_details?.student_id || "",
+            program: app.student_details?.program || "",
+            email: app.student_details?.user?.email || "",
             position: resolvePositionTitle(app),
             status: app.status,
             created_at: app.created_at,
@@ -252,6 +259,22 @@ export default function CoordinatorApplicationsPage() {
                                             <p className="text-xs text-gray-500">Position: {resolvePositionTitle(app)}</p>
                                             <p className="text-xs text-gray-500">Status: {app.status}</p>
                                             <p className="text-xs text-gray-400">Applied: {new Date(app.created_at).toLocaleString()}</p>
+                                            <div className="mt-3 grid gap-2 text-xs text-gray-500 md:grid-cols-2">
+                                                <span className="flex items-center gap-1">
+                                                    <GraduationCap className="h-3.5 w-3.5" />
+                                                    {app.student_details?.program || "Program N/A"} | Student ID {app.student_details?.student_id || "N/A"}
+                                                </span>
+                                                <span>Year {app.student_details?.year_of_study || "N/A"} | Graduation {app.student_details?.graduation_date || "N/A"}</span>
+                                                <span className="flex items-center gap-1">
+                                                    <Mail className="h-3.5 w-3.5" />
+                                                    {app.student_details?.user?.email || "No email"}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Phone className="h-3.5 w-3.5" />
+                                                    {app.student_details?.user?.phone || "No phone"}
+                                                </span>
+                                                <span className="md:col-span-2">Skills: {app.student_details?.skills || "No skills recorded"}</span>
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <select
