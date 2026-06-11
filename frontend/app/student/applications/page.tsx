@@ -65,9 +65,10 @@ export default function StudentApplicationsPage() {
 
     const filteredPositions = useMemo(() => {
         if (!positions) return [];
+        const activePositions = positions.filter((pos) => pos.is_active !== false);
         const query = searchTerm.trim().toLowerCase();
-        if (!query) return positions;
-        return positions.filter((pos) =>
+        if (!query) return activePositions;
+        return activePositions.filter((pos) =>
             [
                 pos.title,
                 pos.organization_details?.name || "",
@@ -248,7 +249,7 @@ export default function StudentApplicationsPage() {
                                     Based on your skills and profile details.
                                 </p>
                                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                    {recommendations.map((pos) => (
+                                    {recommendations.filter((pos) => pos.is_active !== false).map((pos) => (
                                         <div key={pos.id} className="rounded-xl bg-white p-4 shadow-sm">
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -347,7 +348,7 @@ export default function StudentApplicationsPage() {
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                 >
                                     <option value="">Choose a position</option>
-                                    {positions?.map((pos) => (
+                                    {positions?.filter((pos) => pos.is_active !== false).map((pos) => (
                                         <option key={pos.id} value={pos.id}>
                                             {pos.title} - {pos.organization_details?.name || "Organization not available"}
                                         </option>

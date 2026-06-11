@@ -16,12 +16,14 @@ export interface CommunicationMessage {
         username: string;
         full_name: string;
         email: string;
+        role?: string;
     };
     receiver_details?: {
         id: number;
         username: string;
         full_name: string;
         email: string;
+        role?: string;
     };
 }
 
@@ -40,6 +42,7 @@ export interface CommunicationUser {
     last_name?: string;
     full_name?: string;
     email: string;
+    role?: string;
 }
 
 export const communicationSlice = apiSlice.injectEndpoints({
@@ -49,12 +52,14 @@ export const communicationSlice = apiSlice.injectEndpoints({
                 url: "communications/",
                 method: "GET",
             }),
+            providesTags: ["Communication"],
         }),
         getCommunicationUsers: builder.query<CommunicationUser[], unknown>({
             query: () => ({
                 url: "communications/users/",
                 method: "GET",
             }),
+            providesTags: ["Communication"],
         }),
         sendMessage: builder.mutation<CommunicationMessage, SendMessagePayload>({
             query: (message) => ({
@@ -62,6 +67,7 @@ export const communicationSlice = apiSlice.injectEndpoints({
                 method: "POST",
                 body: message,
             }),
+            invalidatesTags: ["Communication"],
         }),
     }),
 });

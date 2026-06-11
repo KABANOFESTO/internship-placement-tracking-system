@@ -128,6 +128,8 @@ class UserSerializer(serializers.ModelSerializer):
     student_profile_id = serializers.SerializerMethodField()
     supervisor_profile_id = serializers.SerializerMethodField()
     coordinator_profile_id = serializers.SerializerMethodField()
+    student_profile = serializers.SerializerMethodField()
+    supervisor_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -143,7 +145,9 @@ class UserSerializer(serializers.ModelSerializer):
             "last_name",
             "phone",
             "student_profile_id",
+            "student_profile",
             "supervisor_profile_id",
+            "supervisor_profile",
             "coordinator_profile_id",
         )
         read_only_fields = ("is_active",)
@@ -151,6 +155,19 @@ class UserSerializer(serializers.ModelSerializer):
     def get_student_profile_id(self, obj):
         profile = getattr(obj, "studentprofile", None)
         return profile.id if profile else None
+
+    def get_student_profile(self, obj):
+        profile = getattr(obj, "studentprofile", None)
+        if not profile:
+            return None
+        return {
+            "id": profile.id,
+            "student_id": profile.student_id,
+            "program": profile.program,
+            "year_of_study": profile.year_of_study,
+            "graduation_date": profile.graduation_date,
+            "skills": profile.skills,
+        }
 
     def get_supervisor_profile_id(self, obj):
         profile = getattr(obj, "supervisorprofile", None)
@@ -160,6 +177,16 @@ class UserSerializer(serializers.ModelSerializer):
                 defaults={"organization": "", "position": ""},
             )
         return profile.id if profile else None
+
+    def get_supervisor_profile(self, obj):
+        profile = getattr(obj, "supervisorprofile", None)
+        if not profile:
+            return None
+        return {
+            "id": profile.id,
+            "organization": profile.organization,
+            "position": profile.position,
+        }
 
     def get_coordinator_profile_id(self, obj):
         profile = getattr(obj, "coordinatorprofile", None)

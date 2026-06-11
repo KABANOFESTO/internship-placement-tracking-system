@@ -112,7 +112,7 @@ export default function StudentReportsPage() {
                 `#${report.id}`,
                 report.type === "FINAL" ? "Final Report" : "Weekly Report",
                 report.submitted_at ? new Date(report.submitted_at).toLocaleDateString() : "-",
-                report.feedback ? "Reviewed" : "Awaiting feedback",
+                report.supervisor_approved ? "Approved by supervisor" : "Pending supervisor approval",
                 report.feedback || "No feedback yet",
             ]);
 
@@ -231,6 +231,9 @@ export default function StudentReportsPage() {
                                             <p className="text-sm font-medium text-gray-900">{report.type} report</p>
                                             <p className="mt-1 text-xs text-gray-500">
                                                 Submitted {formatDistanceToNow(new Date(report.submitted_at), { addSuffix: true })}
+                                            </p>
+                                            <p className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${report.supervisor_approved ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}>
+                                                {report.supervisor_approved ? "Approved by supervisor" : "Pending supervisor approval"}
                                             </p>
                                             {report.feedback && (
                                                 <p className="mt-2 text-xs text-gray-600">Feedback: {report.feedback}</p>
