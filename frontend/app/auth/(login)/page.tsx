@@ -26,7 +26,7 @@ export default function LoginPage() {
 
     const getRoleMessage = (role: string) => {
         switch (role) {
-            case "Admin": return "Welcome, Admin — System Dashboard";
+            case "Admin": return "Welcome, HOD — System Dashboard";
             case "Student": return "Welcome back — Student Portal";
             case "Coordinator": return "Welcome back — Coordinator Dashboard";
             case "Supervisor": return "Welcome back — Supervisor Dashboard";

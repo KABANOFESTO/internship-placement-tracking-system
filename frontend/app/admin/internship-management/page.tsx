@@ -159,7 +159,7 @@ export default function AdminInternshipManagementPage() {
             <div className="p-6 lg:p-8">
                 <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Admin Operations</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">HOD Operations</p>
                         <h1 className="mt-1 text-3xl font-bold text-slate-900">Internship Management</h1>
                         <p className="mt-1 text-sm text-slate-500">Monitor partner positions, placement capacity, and availability.</p>
                     </div>

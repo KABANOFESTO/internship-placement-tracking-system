@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CheckCircle2, FileText, Download } from "lucide-react";
-import { useGetReportsQuery, useSetReportFeedbackMutation } from "@/lib/redux/slices/ReportsSlice";
+import { CheckCircle2, FileText, Download, MessageSquare } from "lucide-react";
+import { useCoordinatorApproveReportMutation, useGetReportsQuery, useSetCoordinatorReportFeedbackMutation } from "@/lib/redux/slices/ReportsSlice";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 
 export default function CoordinatorReportsPage() {
     const { data: reports, isLoading } = useGetReportsQuery();
-    const [setFeedback] = useSetReportFeedbackMutation();
+    const [setFeedback] = useSetCoordinatorReportFeedbackMutation();
+    const [approveReport, { isLoading: isApproving }] = useCoordinatorApproveReportMutation();
     const [feedbackMap, setFeedbackMap] = useState<Record<number, string>>({});
     const apiBase = process.env.NEXT_PUBLIC_API_URL || "";
 
@@ -35,6 +36,15 @@ export default function CoordinatorReportsPage() {
             toast.success("Feedback saved.");
         } catch {
             toast.error("Failed to save feedback.");
+        }
+    };
+
+    const handleApprove = async (id: number) => {
+        try {
+            await approveReport({ id, feedback: feedbackMap[id] }).unwrap();
+            toast.success("Report approved by coordinator.");
+        } catch {
+            toast.error("Failed to approve report.");
         }
     };
 
@@ -74,7 +84,22 @@ export default function CoordinatorReportsPage() {
                                                 Approved by {report.supervisor_approved_by_details?.user?.username || "Supervisor"}
                                                 {report.supervisor_approved_at ? ` on ${new Date(report.supervisor_approved_at).toLocaleDateString()}` : ""}
                                             </p>
-                                            {report.feedback && <p className="mt-2 text-xs text-gray-600">Current feedback: {report.feedback}</p>}
+                                            <div className="mt-2 text-xs text-gray-500">
+                                                <p>Supervisor email: {report.supervisor_approved_by_details?.user?.email || "Not available"}</p>
+                                                <p>Supervisor phone: {report.supervisor_approved_by_details?.user?.phone || "Not available"}</p>
+                                            </div>
+                                            {report.feedback && (
+                                                <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3">
+                                                    <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">Supervisor Feedback</p>
+                                                    <p className="mt-1 text-xs text-blue-900">{report.feedback}</p>
+                                                </div>
+                                            )}
+                                            {report.coordinator_approved && (
+                                                <p className="mt-2 inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                                                    <CheckCircle2 className="mr-1 h-3 w-3" />
+                                                    Coordinator approved
+                                                </p>
+                                            )}
                                         </div>
                                         {report.fileUrl && (
                                             <a
@@ -89,20 +114,31 @@ export default function CoordinatorReportsPage() {
                                         )}
                                     </div>
                                     <div className="mt-4 rounded-lg bg-gray-50 p-3">
-                                        <label className="mb-1 text-xs font-medium text-gray-600">Coordinator Feedback</label>
+                                        <label className="mb-1 flex items-center gap-2 text-xs font-medium text-gray-600">
+                                            <MessageSquare className="h-3 w-3" />
+                                            Coordinator Feedback
+                                        </label>
                                         <textarea
                                             rows={3}
-                                            value={feedbackMap[report.id] ?? report.feedback ?? ""}
+                                            value={feedbackMap[report.id] ?? report.coordinator_feedback ?? ""}
                                             onChange={(e) => setFeedbackMap((prev) => ({ ...prev, [report.id]: e.target.value }))}
                                             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-                                            placeholder="Add feedback for the intern"
+                                            placeholder="Add coordinator feedback for the intern"
                                         />
-                                        <div className="mt-2 flex justify-end">
+                                        <div className="mt-2 flex justify-end gap-2">
                                             <button
                                                 onClick={() => handleSaveFeedback(report.id)}
-                                                className="rounded-md bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
+                                                className="rounded-md border border-blue-200 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-50"
                                             >
                                                 Save Feedback
+                                            </button>
+                                            <button
+                                                onClick={() => handleApprove(report.id)}
+                                                disabled={isApproving || report.coordinator_approved}
+                                                className="inline-flex items-center rounded-md bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                                            >
+                                                <CheckCircle2 className="mr-1 h-3 w-3" />
+                                                {report.coordinator_approved ? "Approved" : "Approve"}
                                             </button>
                                         </div>
                                     </div>

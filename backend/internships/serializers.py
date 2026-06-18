@@ -52,6 +52,9 @@ class OrganizationSerializer(serializers.ModelSerializer):
 
 class InternshipPositionSerializer(serializers.ModelSerializer):
     organization_details = OrganizationSerializer(source="organization", read_only=True)
+    occupied_capacity = serializers.SerializerMethodField()
+    available_capacity = serializers.SerializerMethodField()
+    is_full = serializers.SerializerMethodField()
 
     class Meta:
         model = InternshipPosition
@@ -63,6 +66,9 @@ class InternshipPositionSerializer(serializers.ModelSerializer):
             "description",
             "required_skills",
             "capacity",
+            "occupied_capacity",
+            "available_capacity",
+            "is_full",
             "requirements",
             "location",
             "start_date",
@@ -74,6 +80,21 @@ class InternshipPositionSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             "organization": {"required": False},
         }
+
+    def _occupied(self, obj):
+        annotated = getattr(obj, "occupied_capacity_count", None)
+        if annotated is not None:
+            return annotated
+        return Placement.objects.filter(application__position=obj, confirmed=True).count()
+
+    def get_occupied_capacity(self, obj):
+        return self._occupied(obj)
+
+    def get_available_capacity(self, obj):
+        return max((obj.capacity or 0) - self._occupied(obj), 0)
+
+    def get_is_full(self, obj):
+        return (obj.capacity or 0) > 0 and self._occupied(obj) >= (obj.capacity or 0)
 
 
 class ApplicationSerializer(serializers.ModelSerializer):

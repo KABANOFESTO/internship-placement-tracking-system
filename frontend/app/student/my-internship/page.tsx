@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Briefcase, Calendar, Clock } from "lucide-react";
+import { Briefcase, Calendar, Clock, Mail, Phone } from "lucide-react";
 import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 import { useGetProgressLogsQuery } from "@/lib/redux/slices/TrackingSlice";
 import { format } from "date-fns";
@@ -24,6 +24,8 @@ export default function MyInternshipPage() {
         placement?.supervisor_details?.user?.username ||
         placement?.supervisor_details?.user?.email ||
         null;
+    const supervisorEmail = placement?.supervisor_details?.user?.email || null;
+    const supervisorPhone = placement?.supervisor_details?.user?.phone || null;
     const position = placement?.application_details?.position_details;
     const organization = position?.organization_details;
 
@@ -60,7 +62,20 @@ export default function MyInternshipPage() {
                                 </div>
                                 <div>Program: {placement.student_details?.program || "Not available"}</div>
                                 <div>Status: {placement.confirmed ? "Confirmed" : "Pending confirmation"}</div>
-                                <div>Supervisor: {supervisorName || "Pending assignment"}</div>
+                                <div className="rounded-xl border border-gray-200 bg-white p-4">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Supervisor Contact Information</p>
+                                    <p className="mt-1 font-medium text-gray-900">{supervisorName || "Pending assignment"}</p>
+                                    <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+                                        <p className="flex items-center gap-2">
+                                            <Mail className="h-4 w-4 text-gray-400" />
+                                            {supervisorEmail || "Email not available"}
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-gray-400" />
+                                            {supervisorPhone || "Phone not available"}
+                                        </p>
+                                    </div>
+                                </div>
                                 <div className="flex items-center gap-2">
                                     <Calendar className="h-4 w-4" />
                                     {format(new Date(placement.start_date), "MMM dd, yyyy")} - {format(new Date(placement.end_date), "MMM dd, yyyy")}

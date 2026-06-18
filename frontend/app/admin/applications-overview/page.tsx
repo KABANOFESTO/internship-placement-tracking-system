@@ -151,7 +151,7 @@ export default function AdminApplicationsOverviewPage() {
             <div className="p-6 lg:p-8">
                 <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                     <div>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Admin Review</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">HOD Review</p>
                         <h1 className="mt-1 text-3xl font-bold text-slate-900">Applications Overview</h1>
                         <p className="mt-1 text-sm text-slate-500">Review internship applications with clear student and position context.</p>
                     </div>

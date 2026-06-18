@@ -30,13 +30,27 @@ class ReportSerializer(serializers.ModelSerializer):
             "type",
             "file",
             "feedback",
+            "coordinator_feedback",
+            "coordinator_approved",
+            "coordinator_approved_at",
+            "coordinator_approved_by",
             "supervisor_approved",
             "supervisor_approved_at",
             "supervisor_approved_by",
             "supervisor_approved_by_details",
             "submitted_at",
         ]
-        read_only_fields = ["id", "submitted_at", "supervisor_approved", "supervisor_approved_at", "supervisor_approved_by"]
+        read_only_fields = [
+            "id",
+            "submitted_at",
+            "coordinator_feedback",
+            "coordinator_approved",
+            "coordinator_approved_at",
+            "coordinator_approved_by",
+            "supervisor_approved",
+            "supervisor_approved_at",
+            "supervisor_approved_by",
+        ]
         extra_kwargs = {
             "student": {"required": False},
         }

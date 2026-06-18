@@ -58,7 +58,7 @@ export default function AdminDashboard() {
         <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
             <div className="p-6 lg:p-8">
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+                    <h1 className="text-3xl font-bold text-gray-900">HOD Dashboard</h1>
                     <p className="mt-1 text-sm text-gray-500">System health, usage, and recent activity</p>
                 </div>
 

@@ -33,6 +33,17 @@ def get_partner_organization(user):
     return Organization.objects.filter(contact_email__iexact=user.email).first()
 
 
+def confirmed_placements_count(position, exclude_application=None):
+    queryset = Placement.objects.filter(application__position=position, confirmed=True)
+    if exclude_application:
+        queryset = queryset.exclude(application=exclude_application)
+    return queryset.count()
+
+
+def position_has_capacity(position, exclude_application=None):
+    return confirmed_placements_count(position, exclude_application=exclude_application) < (position.capacity or 0)
+
+
 class OrganizationViewSet(viewsets.ModelViewSet):
     queryset = Organization.objects.all().order_by("name")
     serializer_class = OrganizationSerializer
@@ -101,11 +112,17 @@ class InternshipPositionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = InternshipPosition.objects.select_related("organization").all().order_by("-created_at")
+        queryset = InternshipPosition.objects.select_related("organization").annotate(
+            occupied_capacity_count=models.Count(
+                "application__placement",
+                filter=models.Q(application__placement__confirmed=True),
+                distinct=True,
+            )
+        ).all().order_by("-created_at")
         if is_admin_or_coordinator(self.request.user):
             return queryset
         if hasattr(self.request.user, "studentprofile"):
-            return queryset.filter(is_active=True)
+            return queryset.filter(is_active=True, occupied_capacity_count__lt=models.F("capacity"))
         if is_partner(self.request.user):
             org = get_partner_organization(self.request.user)
             return queryset.filter(organization=org) if org else queryset.none()
@@ -161,7 +178,14 @@ class InternshipPositionViewSet(viewsets.ModelViewSet):
 
         student_skills = {s.strip().lower() for s in (student.skills or "").split(",") if s.strip()}
         recommendations = []
-        for position in InternshipPosition.objects.filter(is_active=True):
+        positions = InternshipPosition.objects.select_related("organization").annotate(
+            occupied_capacity_count=models.Count(
+                "application__placement",
+                filter=models.Q(application__placement__confirmed=True),
+                distinct=True,
+            )
+        ).filter(is_active=True, occupied_capacity_count__lt=models.F("capacity"))
+        for position in positions:
             required_skills = {s.strip().lower() for s in (position.required_skills or "").split(",") if s.strip()}
             if not required_skills:
                 score = 0
@@ -211,6 +235,8 @@ class ApplicationViewSet(viewsets.ModelViewSet):
             position = serializer.validated_data.get("position")
             if position and not position.is_active:
                 raise ValidationError("This internship position is closed and no longer accepts applications.")
+            if position and not position_has_capacity(position):
+                raise ValidationError("This position has reached its maximum capacity and is no longer available for registration.")
             serializer.save(student=self.request.user.studentprofile)
             return
         raise ValidationError("Student profile not found for current user.")
@@ -297,6 +323,13 @@ class PlacementViewSet(viewsets.ModelViewSet):
             raise ValidationError("Only admins, coordinators, or partner organizations can create placements.")
         return super().create(request, *args, **kwargs)
 
+    def perform_create(self, serializer):
+        application = serializer.validated_data.get("application")
+        confirmed = serializer.validated_data.get("confirmed", False)
+        if confirmed and application and not position_has_capacity(application.position):
+            raise ValidationError("This position has reached its maximum capacity and cannot accept more confirmed placements.")
+        serializer.save()
+
     def update(self, request, *args, **kwargs):
         if is_partner(request.user):
             placement = self.get_object()
@@ -304,6 +337,11 @@ class PlacementViewSet(viewsets.ModelViewSet):
                 raise ValidationError("You can only update placements for your organization.")
         elif not is_admin_or_coordinator(request.user):
             raise ValidationError("Only admins, coordinators, or partner organizations can update placements.")
+        placement = self.get_object()
+        requested_confirmed = request.data.get("confirmed")
+        if requested_confirmed in [True, "true", "True", "1", 1] and not placement.confirmed:
+            if not position_has_capacity(placement.application.position, exclude_application=placement.application):
+                raise ValidationError("This position has reached its maximum capacity and cannot accept more confirmed placements.")
         return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
@@ -329,6 +367,12 @@ class PlacementViewSet(viewsets.ModelViewSet):
         supervisor = SupervisorProfile.objects.filter(pk=supervisor_id).first()
         if not supervisor:
             return Response({"detail": "Supervisor not found."}, status=status.HTTP_404_NOT_FOUND)
+        existing = Placement.objects.filter(application=application).first()
+        if not position_has_capacity(application.position, exclude_application=application if existing else None):
+            return Response(
+                {"detail": "This position has reached its maximum capacity and cannot accept more confirmed placements."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         placement, _ = Placement.objects.update_or_create(
             application=application,
             defaults={

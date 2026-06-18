@@ -166,7 +166,7 @@ export default function SignupPage() {
                 throw new Error(message);
             }
 
-            toast.success("🎓 Account created! Please sign in.", {
+            toast.success("Account created. Check your institutional email to verify ownership, then sign in.", {
                 duration: 3500,
                 style: {
                     background: "linear-gradient(135deg, #10b981, #059669)",
@@ -473,6 +473,9 @@ export default function SignupPage() {
                                 <div>
                                     <label className="block text-sm font-medium text-slate-700 mb-1.5">Institutional Email <span className="text-red-500">*</span></label>
                                     <input type="email" className="inp w-full px-4 py-2.5 rounded-xl text-sm" placeholder="you@university.ac.rw" value={form.email} onChange={e => set("email", e.target.value)} required />
+                                    <p className="text-xs mt-1" style={{ color: "#64748b" }}>
+                                        A verification link will be sent here to confirm ownership. No code is required.
+                                    </p>
                                 </div>
 
                                 <div>
@@ -638,6 +641,7 @@ export default function SignupPage() {
                                     <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Registration Summary</p>
                                     <div className="flex justify-between text-xs"><span style={{ color: "#94a3b8" }}>Name</span><span className="font-medium text-slate-700">{form.first_name} {form.last_name}</span></div>
                                     <div className="flex justify-between text-xs"><span style={{ color: "#94a3b8" }}>Email</span><span className="font-medium text-slate-700">{form.email || "—"}</span></div>
+                                    <div className="flex justify-between text-xs"><span style={{ color: "#94a3b8" }}>Email verification</span><span className="font-medium text-slate-700">Link sent after registration</span></div>
                                     <div className="flex justify-between text-xs"><span style={{ color: "#94a3b8" }}>Student ID</span><span className="font-medium text-slate-700">{form.student_id || "—"}</span></div>
                                     <div className="flex justify-between text-xs"><span style={{ color: "#94a3b8" }}>Program</span><span className="font-medium text-slate-700 text-right ml-4 truncate max-w-[180px]">{form.program || "—"}</span></div>
                                     <div className="flex justify-between text-xs"><span style={{ color: "#94a3b8" }}>Role</span><span className="font-semibold text-blue-600">🎓 Student</span></div>
@@ -682,3 +686,4 @@ export default function SignupPage() {
         </div>
     );
 }
+

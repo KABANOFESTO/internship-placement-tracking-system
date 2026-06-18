@@ -10,6 +10,16 @@ class Report(models.Model):
     type = models.CharField(max_length=20, choices=Type.choices)
     file = models.FileField(upload_to="reports/")
     feedback = models.TextField(blank=True)
+    coordinator_feedback = models.TextField(blank=True)
+    coordinator_approved = models.BooleanField(default=False)
+    coordinator_approved_at = models.DateTimeField(null=True, blank=True)
+    coordinator_approved_by = models.ForeignKey(
+        "authapi.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="coordinator_approved_reports",
+    )
     supervisor_approved = models.BooleanField(default=False)
     supervisor_approved_at = models.DateTimeField(null=True, blank=True)
     supervisor_approved_by = models.ForeignKey(
