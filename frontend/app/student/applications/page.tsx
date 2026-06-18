@@ -14,7 +14,7 @@ import { toast } from "sonner";
 const PAGE_SIZE = 6;
 
 const statusLabel = (status: string) => {
-    if (status === "PARTNER_ACCEPTED") return "Accepted by Partner - Awaiting Admin Confirmation";
+    if (status === "PARTNER_ACCEPTED") return "Accepted by Partner - Awaiting HOD Confirmation";
     if (status === "APPROVED") return "Approved - Final Confirmation";
     if (status === "REJECTED") return "Rejected";
     return "Pending Partner Review";
@@ -65,7 +65,7 @@ export default function StudentApplicationsPage() {
 
     const filteredPositions = useMemo(() => {
         if (!positions) return [];
-        const activePositions = positions.filter((pos) => pos.is_active !== false);
+        const activePositions = positions.filter((pos) => pos.is_active !== false && !pos.is_full && (pos.available_capacity ?? pos.capacity) > 0);
         const query = searchTerm.trim().toLowerCase();
         if (!query) return activePositions;
         return activePositions.filter((pos) =>
@@ -96,6 +96,10 @@ export default function StudentApplicationsPage() {
     const handleSubmit = async () => {
         if (!selectedPositionId) {
             toast.error("Please select a position.");
+            return;
+        }
+        if (selectedPosition?.is_full || (selectedPosition?.available_capacity ?? selectedPosition?.capacity ?? 0) <= 0) {
+            toast.error("This position has reached its maximum capacity and is no longer available for registration.");
             return;
         }
         if (!coverLetter.trim()) {
@@ -249,7 +253,7 @@ export default function StudentApplicationsPage() {
                                     Based on your skills and profile details.
                                 </p>
                                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                                    {recommendations.filter((pos) => pos.is_active !== false).map((pos) => (
+                                    {recommendations.filter((pos) => pos.is_active !== false && !pos.is_full && (pos.available_capacity ?? pos.capacity) > 0).map((pos) => (
                                         <div key={pos.id} className="rounded-xl bg-white p-4 shadow-sm">
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -293,7 +297,7 @@ export default function StudentApplicationsPage() {
                                             <div className="mt-3 flex flex-wrap items-center gap-4 text-sm text-gray-500">
                                                 <span className="flex items-center gap-1">
                                                     <Briefcase className="h-4 w-4" />
-                                                    Capacity: {pos.capacity}
+                                                    Available: {pos.available_capacity ?? pos.capacity} / {pos.capacity}
                                                 </span>
                                                 <span className="flex items-center gap-1">
                                                     <Clock className="h-4 w-4" />
@@ -303,9 +307,14 @@ export default function StudentApplicationsPage() {
                                         </div>
                                         <button
                                             onClick={() => {
+                                                if (pos.is_full || (pos.available_capacity ?? pos.capacity) <= 0) {
+                                                    toast.error("This position has reached its maximum capacity and is no longer available for registration.");
+                                                    return;
+                                                }
                                                 setSelectedPositionId(pos.id);
                                                 setShowApplyModal(true);
                                             }}
+                                            disabled={pos.is_full || (pos.available_capacity ?? pos.capacity) <= 0}
                                             className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                                         >
                                             <CheckCircle2 className="mr-2 h-4 w-4" />
@@ -348,7 +357,7 @@ export default function StudentApplicationsPage() {
                                     className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
                                 >
                                     <option value="">Choose a position</option>
-                                    {positions?.filter((pos) => pos.is_active !== false).map((pos) => (
+                                    {positions?.filter((pos) => pos.is_active !== false && !pos.is_full && (pos.available_capacity ?? pos.capacity) > 0).map((pos) => (
                                         <option key={pos.id} value={pos.id}>
                                             {pos.title} - {pos.organization_details?.name || "Organization not available"}
                                         </option>

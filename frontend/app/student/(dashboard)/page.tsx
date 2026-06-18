@@ -68,7 +68,7 @@ export default function StudentDashboard() {
     }, [notifications]);
 
     const placementSubtext = currentPlacement
-        ? `${currentPlacement.student_details?.program || "Internship placement"}${
+        ? `${currentPlacement.application_details?.position_details?.title || "Internship placement"}${
               currentPlacement.supervisor_details?.user?.username ? ` with ${currentPlacement.supervisor_details.user.username}` : ""
           }`
         : "Awaiting placement";

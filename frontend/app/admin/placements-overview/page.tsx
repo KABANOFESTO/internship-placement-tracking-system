@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BriefcaseBusiness, Building2, CalendarDays, CheckCircle2, Search, UserCheck } from "lucide-react";
+import { BriefcaseBusiness, Building2, CalendarDays, CheckCircle2, Mail, Phone, Search, UserCheck } from "lucide-react";
 import { useGetPlacementsQuery, useUpdatePlacementMutation } from "@/lib/redux/slices/InternshipsSlice";
 import { toast } from "sonner";
 
@@ -73,7 +73,7 @@ export default function AdminPlacementsOverviewPage() {
         <div className="min-h-screen bg-slate-50">
             <div className="p-6 lg:p-8">
                 <div className="mb-6">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Admin Review</p>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">HOD Review</p>
                     <h1 className="mt-1 text-3xl font-bold text-slate-900">Placements Overview</h1>
                     <p className="mt-1 text-sm text-slate-500">Track confirmed and pending internship placements with clear organization and position details.</p>
                 </div>
@@ -158,6 +158,16 @@ export default function AdminPlacementsOverviewPage() {
                                                     {resolvePositionTitle(placement)} at {resolveOrganizationName(placement)}
                                                 </p>
                                                 <p className="mt-1 text-sm text-slate-600">Supervisor: {resolveSupervisorName(placement)}</p>
+                                                <div className="mt-2 grid gap-1 text-xs text-slate-500 sm:grid-cols-2">
+                                                    <span className="flex items-center gap-1">
+                                                        <Mail className="h-3.5 w-3.5 text-slate-400" />
+                                                        {placement.supervisor_details?.user?.email || "Supervisor email not available"}
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Phone className="h-3.5 w-3.5 text-slate-400" />
+                                                        {placement.supervisor_details?.user?.phone || "Supervisor phone not available"}
+                                                    </span>
+                                                </div>
                                                 <p className="mt-1 text-xs text-slate-500">
                                                     Dates: {new Date(placement.start_date).toLocaleDateString()} - {new Date(placement.end_date).toLocaleDateString()}
                                                 </p>

@@ -72,6 +72,42 @@ class ReportViewSet(viewsets.ModelViewSet):
         return Response({"message": "Feedback updated.", "feedback": report.feedback})
 
     @action(detail=True, methods=["post"])
+    def set_coordinator_feedback(self, request, pk=None):
+        report = self.get_object()
+        if request.user.role not in ["Admin", "Coordinator"] and not request.user.is_staff:
+            return Response({"detail": "Only admins or coordinators can add coordinator feedback."}, status=status.HTTP_403_FORBIDDEN)
+        feedback = request.data.get("feedback", "")
+        report.coordinator_feedback = feedback
+        report.save(update_fields=["coordinator_feedback"])
+        log_action(
+            request,
+            action="REPORT_COORDINATOR_FEEDBACK_SET",
+            target_user=report.student.user if hasattr(report.student, "user") else None,
+            additional_data={"report_id": report.id},
+        )
+        return Response({"message": "Coordinator feedback updated.", "coordinator_feedback": report.coordinator_feedback})
+
+    @action(detail=True, methods=["post"])
+    def coordinator_approve(self, request, pk=None):
+        report = self.get_object()
+        if request.user.role not in ["Admin", "Coordinator"] and not request.user.is_staff:
+            return Response({"detail": "Only admins or coordinators can approve reports."}, status=status.HTTP_403_FORBIDDEN)
+        feedback = request.data.get("feedback")
+        if feedback is not None:
+            report.coordinator_feedback = feedback
+        report.coordinator_approved = True
+        report.coordinator_approved_at = timezone.now()
+        report.coordinator_approved_by = request.user
+        report.save(update_fields=["coordinator_feedback", "coordinator_approved", "coordinator_approved_at", "coordinator_approved_by"])
+        log_action(
+            request,
+            action="REPORT_COORDINATOR_APPROVED",
+            target_user=report.student.user if hasattr(report.student, "user") else None,
+            additional_data={"report_id": report.id},
+        )
+        return Response(self.get_serializer(report).data)
+
+    @action(detail=True, methods=["post"])
     def approve(self, request, pk=None):
         report = self.get_object()
         supervisor_profile = getattr(request.user, "supervisorprofile", None)

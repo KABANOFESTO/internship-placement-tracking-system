@@ -432,6 +432,32 @@ class ResetPasswordView(APIView):
             )
 
 
+class VerifyInstitutionEmailView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, uidb64, token):
+        try:
+            user_id = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=user_id)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Invalid verification link."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"error": "Invalid or expired verification link."}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not user.institution_email_verified:
+            user.institution_email_verified = True
+            user.save(update_fields=["institution_email_verified"])
+            log_action(
+                request,
+                "INSTITUTION_EMAIL_VERIFIED",
+                target_user=user,
+                additional_data={"email": user.email},
+            )
+
+        return Response({"message": "Institutional email verified successfully."}, status=status.HTTP_200_OK)
+
+
 class UserListView(generics.ListAPIView):
     """Admin view to list all users"""
 

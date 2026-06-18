@@ -25,6 +25,9 @@ export interface InternshipPosition {
     description: string;
     required_skills: string;
     capacity: number;
+    occupied_capacity?: number;
+    available_capacity?: number;
+    is_full?: boolean;
     requirements?: string;
     location?: string;
     start_date?: string | null;
@@ -214,15 +217,15 @@ export const internshipsSlice = apiSlice.injectEndpoints({
         }),
         createPlacement: builder.mutation<Placement, Partial<Placement>>({
             query: (data) => ({ url: "placements/", method: "POST", body: data }),
-            invalidatesTags: ["Placement"],
+            invalidatesTags: ["Placement", "Position", "Application", "Analytics"],
         }),
         updatePlacement: builder.mutation<Placement, { id: string; data: Partial<Placement> }>({
             query: ({ id, data }) => ({ url: `placements/${id}/`, method: "PUT", body: data }),
-            invalidatesTags: ["Placement"],
+            invalidatesTags: ["Placement", "Position", "Application", "Analytics"],
         }),
         deletePlacement: builder.mutation<void, string>({
             query: (id) => ({ url: `placements/${id}/`, method: "DELETE" }),
-            invalidatesTags: ["Placement"],
+            invalidatesTags: ["Placement", "Position", "Application", "Analytics"],
         }),
         getPlacementStatistics: builder.query<PlacementStatistics, void>({
             query: () => ({ url: "placements/statistics/", method: "GET" }),
@@ -233,7 +236,7 @@ export const internshipsSlice = apiSlice.injectEndpoints({
             { application: string; supervisor: number; start_date: string; end_date: string }
         >({
             query: (data) => ({ url: "placements/assign_supervisor/", method: "POST", body: data }),
-            invalidatesTags: ["Placement", "Application", "Analytics"],
+            invalidatesTags: ["Placement", "Position", "Application", "Analytics"],
         }),
         getPartnerDashboard: builder.query<PartnerDashboard, void>({
             query: () => ({ url: "partner/dashboard/", method: "GET" }),

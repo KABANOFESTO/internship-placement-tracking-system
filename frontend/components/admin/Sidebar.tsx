@@ -96,7 +96,7 @@ function ConfirmDialog({
                         Sign Out?
                     </h3>
                     <p className="text-slate-500 text-center text-sm leading-relaxed mb-6">
-                        You&apos;ll need to sign in again to access the admin dashboard.
+                        You&apos;ll need to sign in again to access the HOD dashboard.
                     </p>
                     <div className="flex gap-3">
                         <button
@@ -311,7 +311,7 @@ export default function AdminSidebar() {
                     </div> 
                     <div>
                         <div className="sora text-sm font-bold text-white leading-tight">
-                            Admin Portal
+                            HOD Portal
                         </div>
                     </div>
                 </div>
@@ -327,11 +327,11 @@ export default function AdminSidebar() {
                     <div className="ad-avatar">{initials}</div>
                     <div className="flex-1 min-w-0">
                         <div className="sora text-sm font-semibold text-white truncate mb-1">
-                            {user?.name ?? "Administrator"}
+                            {user?.name ?? "HOD"}
                         </div>
                         <span className="ad-role-badge">
                             <Crown size={9} />
-                            Administrator
+                            Head of Department
                         </span>
                     </div>
                     <ChevronRight size={14} style={{ color: "rgba(255,255,255,0.22)", flexShrink: 0 }} />

@@ -41,8 +41,8 @@ export default function PartnerApplicationsPage() {
     };
 
     const statusLabel = (status: string) => {
-        if (status === "PARTNER_ACCEPTED") return "Accepted - Awaiting Admin Confirmation";
-        if (status === "APPROVED") return "Approved by Admin";
+        if (status === "PARTNER_ACCEPTED") return "Accepted - Awaiting HOD Confirmation";
+        if (status === "APPROVED") return "Approved by HOD";
         if (status === "REJECTED") return "Rejected";
         return "Pending Partner Review";
     };

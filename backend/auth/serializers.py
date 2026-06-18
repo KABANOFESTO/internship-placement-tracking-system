@@ -1,6 +1,11 @@
 from rest_framework import serializers
 from .models import CoordinatorProfile, StudentProfile, SupervisorProfile, User
 from django.contrib.auth.password_validation import validate_password
+from django.contrib.auth.tokens import default_token_generator
+from django.conf import settings
+from django.core.mail import send_mail
+from django.utils.encoding import force_bytes
+from django.utils.http import urlsafe_base64_encode
 
 
 class StudentProfileInputSerializer(serializers.Serializer):
@@ -80,6 +85,7 @@ class RegisterSerializer(serializers.ModelSerializer):
                 graduation_date=student_profile.get("graduation_date"),
                 skills=student_profile.get("skills", ""),
             )
+            self._send_institution_email_verification(user)
         elif user.role == User.Role.SUPERVISOR:
             SupervisorProfile.objects.get_or_create(
                 user=user,
@@ -91,6 +97,28 @@ class RegisterSerializer(serializers.ModelSerializer):
                 defaults={"department": ""},
             )
         return user
+
+    def _send_institution_email_verification(self, user):
+        verification_base_url = getattr(
+            settings,
+            "BACKEND_VERIFY_EMAIL_URL",
+            "http://127.0.0.1:8000/api/auth/verify-institution-email",
+        )
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        verify_link = f"{verification_base_url}/{uid}/{token}/"
+        send_mail(
+            subject="Verify your institutional email",
+            message=(
+                f"Hello {user.first_name or user.username},\n\n"
+                "Please confirm that this institutional email belongs to you by clicking the link below:\n\n"
+                f"{verify_link}\n\n"
+                "No code or password is required. This link only verifies ownership of your email address."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True,
+        )
 
 
 class AdminUserCreateSerializer(serializers.ModelSerializer):
@@ -144,6 +172,7 @@ class UserSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "phone",
+            "institution_email_verified",
             "student_profile_id",
             "student_profile",
             "supervisor_profile_id",

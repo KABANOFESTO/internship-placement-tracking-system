@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Briefcase, Calendar, CheckCircle2 } from "lucide-react";
+import { Briefcase, Calendar, CheckCircle2, Mail, Phone } from "lucide-react";
 import { useGetPlacementsQuery } from "@/lib/redux/slices/InternshipsSlice";
 import { format } from "date-fns";
 
@@ -17,6 +17,8 @@ export default function StudentPlacementPage() {
         confirmedPlacement?.supervisor_details?.user?.username ||
         confirmedPlacement?.supervisor_details?.user?.email ||
         null;
+    const supervisorEmail = confirmedPlacement?.supervisor_details?.user?.email || null;
+    const supervisorPhone = confirmedPlacement?.supervisor_details?.user?.phone || null;
     const position = confirmedPlacement?.application_details?.position_details;
     const organization = position?.organization_details;
 
@@ -94,6 +96,16 @@ export default function StudentPlacementPage() {
                                     <p className="mt-1 text-sm font-medium text-gray-900">
                                         {supervisorName || "Pending assignment"}
                                     </p>
+                                    <div className="mt-3 grid gap-2 text-sm text-gray-600 sm:grid-cols-2">
+                                        <p className="flex items-center gap-2">
+                                            <Mail className="h-4 w-4 text-gray-400" />
+                                            {supervisorEmail || "Email not available"}
+                                        </p>
+                                        <p className="flex items-center gap-2">
+                                            <Phone className="h-4 w-4 text-gray-400" />
+                                            {supervisorPhone || "Phone not available"}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-gray-500">
