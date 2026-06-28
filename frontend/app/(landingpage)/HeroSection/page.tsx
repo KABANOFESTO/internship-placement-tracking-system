@@ -255,17 +255,6 @@ const HeroSection: React.FC = () => {
                 <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-16 py-24 w-full">
                     <div className="max-w-2xl">
 
-                        {/* Badge */}
-                        <div className="animate-fadeUp mb-6" style={{ animationDelay: "0.05s" }}>
-                            <span className="badge-pill">
-                                <span
-                                    className="w-2 h-2 rounded-full flex-shrink-0"
-                                    style={{ background: "#38bdf8", boxShadow: "0 0 8px rgba(56,189,248,0.8)" }}
-                                />
-                                Academic Internship Platform
-                            </span>
-                        </div>
-
                         {/* Headline */}
                         <h1
                             className="hero-title text-5xl lg:text-6xl xl:text-7xl leading-[1.08] tracking-tight mb-6 animate-fadeUp"

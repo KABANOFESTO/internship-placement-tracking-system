@@ -115,7 +115,11 @@ export default function LoginPage() {
 
                 /* Left panel dark navy */
                 .left-panel {
-                    background: linear-gradient(160deg, #090f1a 0%, #0b1525 50%, #0d1f3a 100%);
+                    background:
+                        linear-gradient(160deg, rgba(9,15,26,0.78) 0%, rgba(11,21,37,0.66) 50%, rgba(13,31,58,0.84) 100%),
+                        url('/auca-students.jpg');
+                    background-size: cover;
+                    background-position: center;
                     position: relative;
                     overflow: hidden;
                 }
@@ -260,31 +264,6 @@ export default function LoginPage() {
                             A centralised platform for skill-based placement, real-time progress
                             tracking, supervisor evaluations, and report submissions.
                         </p>
-
-                        {/* Role access cards */}
-                        <div className="flex flex-col gap-4">
-                            {[
-                                { role: "Student", desc: "Apply, track progress & submit reports", icon: "🎓", delay: "0s" },
-                                { role: "Supervisor", desc: "Evaluate interns & provide feedback", icon: "📋", delay: "0.1s" },
-                                { role: "Coordinator", desc: "Manage placements & oversee evaluations", icon: "🗂️", delay: "0.2s" },
-                            ].map((item, i) => (
-                                <div
-                                    key={item.role}
-                                    className={`flex items-center gap-4 px-5 py-4 rounded-xl ${i === 0 ? "float-card" : i === 1 ? "float-card-2" : "float-card-3"}`}
-                                    style={{
-                                        background: "rgba(255,255,255,0.05)",
-                                        border: "1px solid rgba(99,179,237,0.14)",
-                                        backdropFilter: "blur(8px)",
-                                    }}
-                                >
-                                    <span className="text-2xl">{item.icon}</span>
-                                    <div>
-                                        <div className="sora text-sm font-semibold text-white">{item.role}</div>
-                                        <div className="text-xs" style={{ color: "#7b92b0" }}>{item.desc}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
                     </div>
                 </div>
 

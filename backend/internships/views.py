@@ -326,6 +326,8 @@ class PlacementViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         application = serializer.validated_data.get("application")
         confirmed = serializer.validated_data.get("confirmed", False)
+        if is_partner(self.request.user) and application and application.status != Application.Status.APPROVED:
+            raise ValidationError("HOD approval is required before a supervisor can be assigned.")
         if confirmed and application and not position_has_capacity(application.position):
             raise ValidationError("This position has reached its maximum capacity and cannot accept more confirmed placements.")
         serializer.save()
@@ -382,11 +384,9 @@ class PlacementViewSet(viewsets.ModelViewSet):
                 "confirmed": True,
             },
         )
-        if is_partner(request.user):
-            application.status = Application.Status.PARTNER_ACCEPTED
-        else:
+        if not is_partner(request.user) and application.status != Application.Status.APPROVED:
             application.status = Application.Status.APPROVED
-        application.save(update_fields=["status"])
+            application.save(update_fields=["status"])
         return Response(self.get_serializer(placement).data)
 
     @action(detail=False, methods=["get"])
