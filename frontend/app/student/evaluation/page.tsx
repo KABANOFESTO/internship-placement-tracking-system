@@ -5,6 +5,14 @@ import { Star, ClipboardList } from "lucide-react";
 import { useGetEvaluationSummariesQuery, useGetEvaluationsQuery } from "@/lib/redux/slices/EvaluationsSlice";
 import { formatDistanceToNow } from "date-fns";
 
+const CRITERIA_LABELS: Record<string, string> = {
+    professional_knowledge: "Professional Knowledge",
+    professional_qualities: "Professional Qualities",
+    personal_qualities: "Personal Qualities",
+    responsibility: "Responsibility",
+    relationship_with_coworkers: "Relationship with Co-workers",
+};
+
 export default function StudentEvaluationPage() {
     const { data: evaluations, isLoading } = useGetEvaluationsQuery();
     const { data: summaries } = useGetEvaluationSummariesQuery();
@@ -73,6 +81,24 @@ export default function StudentEvaluationPage() {
                                                     <div key={rating.id} className="flex items-center justify-between text-sm text-gray-600">
                                                         <span>Criterion #{rating.criterion}</span>
                                                         <span className="font-medium text-gray-900">{rating.score}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    {evaluation.criterion_scores && (
+                                        <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50 p-4">
+                                            <div className="mb-2 flex items-center gap-2 text-sm font-medium text-blue-900">
+                                                <ClipboardList className="h-4 w-4" />
+                                                Official Criterion Scores
+                                            </div>
+                                            <div className="grid gap-2 md:grid-cols-2">
+                                                {Object.entries(CRITERIA_LABELS).map(([key, label]) => (
+                                                    <div key={key} className="flex items-center justify-between rounded-md bg-white px-3 py-2 text-sm">
+                                                        <span className="text-gray-600">{label}</span>
+                                                        <span className="font-semibold text-gray-900">
+                                                            {(evaluation.criterion_scores?.[key] ?? 0)}/10
+                                                        </span>
                                                     </div>
                                                 ))}
                                             </div>

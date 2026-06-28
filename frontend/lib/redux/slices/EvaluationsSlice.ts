@@ -23,6 +23,7 @@ export interface Evaluation {
     supervisor: number | null;
     evaluation_type: EvaluationType;
     score: number;
+    criterion_scores?: Record<string, number>;
     max_score?: number;
     percentage?: number;
     score_out_of_20_component?: number;

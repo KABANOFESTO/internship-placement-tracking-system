@@ -10,6 +10,7 @@ class Evaluation(models.Model):
     supervisor = models.ForeignKey("authapi.SupervisorProfile", on_delete=models.SET_NULL, null=True)
     evaluation_type = models.CharField(max_length=20, choices=EvaluationType.choices)
     score = models.PositiveSmallIntegerField()
+    criterion_scores = models.JSONField(default=dict, blank=True)
     feedback = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
